@@ -7,7 +7,8 @@ A todo application where you can tag and prioritize entries, add links to ticket
 - SQL Express
 
 ## Architecture
-- Functions should have one responsibility
+- Functions should only have one responsibility
+- Constants should be kept in a constants file
 
 ## Rules
 - Don't add dependencies without asking
