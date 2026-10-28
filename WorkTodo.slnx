@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WorkTodo.Core/WorkTodo.Core.csproj" />
+    <Project Path="src/WorkTodo.Data/WorkTodo.Data.csproj" />
+    <Project Path="src/WorkTodo.Services/WorkTodo.Services.csproj" />
+    <Project Path="src/WorkTodo.Web/WorkTodo.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WorkTodo.Core.Tests/WorkTodo.Core.Tests.csproj" />
+    <Project Path="tests/WorkTodo.Data.Tests/WorkTodo.Data.Tests.csproj" />
+    <Project Path="tests/WorkTodo.Services.Tests/WorkTodo.Services.Tests.csproj" />
+    <Project Path="tests/WorkTodo.Web.Tests/WorkTodo.Web.Tests.csproj" />
+  </Folder>
+</Solution>
