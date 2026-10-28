@@ -1,6 +1,10 @@
+using WorkTodo.Data;
+using WorkTodo.Data.Constants;
 using WorkTodo.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDataLayer(builder.Configuration.GetConnectionString(DatabaseConstants.ConnectionStringName)!);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
