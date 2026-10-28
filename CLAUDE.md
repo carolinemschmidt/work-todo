@@ -9,6 +9,7 @@ A todo application where you can tag and prioritize entries, add links to ticket
 ## Architecture
 - Functions should only have one responsibility
 - Constants should be kept in a constants file
+- All major functionality should have tests
 
 ## Rules
 - Don't add dependencies without asking
