@@ -37,6 +37,24 @@ public class ValidationMessageTests
     }
 
     [Fact]
+    public void Undefined_priority_message_names_the_field()
+    {
+        var exception = Assert.Throws<ArgumentException>(() => new TodoItem("Title", (Priority)999));
+
+        Assert.Equal("Priority is not a valid value.", exception.Message);
+    }
+
+    [Fact]
+    public void Undefined_status_message_names_the_field()
+    {
+        var item = new TodoItem("Title", Priority.Low);
+
+        var exception = Assert.Throws<ArgumentException>(() => item.ChangeStatus((TodoStatus)999));
+
+        Assert.Equal("Status is not a valid value.", exception.Message);
+    }
+
+    [Fact]
     public void Blank_tag_name_message_names_the_field()
     {
         var exception = Assert.ThrowsAny<ArgumentException>(() => new Tag(" "));

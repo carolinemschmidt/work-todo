@@ -18,7 +18,7 @@ public class TodoItem
     public TodoItem(string title, Priority priority, string? description = null, DateOnly? dueDate = null)
     {
         Title = Guard.RequiredText(title, ValidationConstants.TitleMaxLength, FieldLabels.Title);
-        Priority = priority;
+        Priority = Guard.DefinedEnum(priority, FieldLabels.Priority);
         Description = Guard.OptionalText(description, ValidationConstants.DescriptionMaxLength, FieldLabels.Description);
         DueDate = dueDate;
     }
@@ -44,12 +44,12 @@ public class TodoItem
     public void Update(string title, Priority priority, string? description, DateOnly? dueDate)
     {
         Title = Guard.RequiredText(title, ValidationConstants.TitleMaxLength, FieldLabels.Title);
-        Priority = priority;
+        Priority = Guard.DefinedEnum(priority, FieldLabels.Priority);
         Description = Guard.OptionalText(description, ValidationConstants.DescriptionMaxLength, FieldLabels.Description);
         DueDate = dueDate;
     }
 
-    public void ChangeStatus(TodoStatus status) => Status = status;
+    public void ChangeStatus(TodoStatus status) => Status = Guard.DefinedEnum(status, FieldLabels.Status);
 
     public void AddTag(Tag tag)
     {
