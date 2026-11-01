@@ -158,4 +158,34 @@ public class TodoRepositoryTests
         Assert.Empty(await verification.Set<TodoDependency>().ToListAsync());
         Assert.Equal(2, await verification.Set<TodoItem>().CountAsync());
     }
+
+    [Fact]
+    public async Task Removed_tags_ticket_links_and_free_text_dependencies_stay_removed_after_update()
+    {
+        using var database = new SqliteTestDatabase();
+        var setupContext = database.CreateContext();
+        var tag = new Tag("work");
+        await new TagRepository(setupContext).AddAsync(tag);
+        var saved = new TodoItem("Write report", Priority.Low);
+        saved.AddTag(tag);
+        saved.AddTicketLink("https://tickets.example.com/ABC-1");
+        saved.AddFreeTextDependency("Waiting for finance");
+        await new TodoRepository(setupContext).AddAsync(saved);
+
+        var repository = new TodoRepository(database.CreateContext());
+        var item = await repository.GetByIdAsync(saved.Id);
+        item!.RemoveTag(item.Tags.Single());
+        item.RemoveTicketLink(item.TicketLinks.Single());
+        item.RemoveFreeTextDependency(item.FreeTextDependencies.Single());
+        await repository.UpdateAsync(item);
+
+        using var verification = database.CreateContext();
+        var reloaded = await new TodoRepository(verification).GetByIdAsync(saved.Id);
+        Assert.Empty(reloaded!.Tags);
+        Assert.Empty(reloaded.TicketLinks);
+        Assert.Empty(reloaded.FreeTextDependencies);
+        Assert.Empty(await verification.Set<TicketLink>().ToListAsync());
+        Assert.Empty(await verification.Set<FreeTextDependency>().ToListAsync());
+        Assert.Equal(1, await verification.Set<Tag>().CountAsync());
+    }
 }

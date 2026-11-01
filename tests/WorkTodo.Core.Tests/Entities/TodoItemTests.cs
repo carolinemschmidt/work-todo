@@ -144,4 +144,38 @@ public class TodoItemTests
 
         Assert.Equal(2, item.FreeTextDependencies.Count);
     }
+
+    [Fact]
+    public void Tag_can_be_removed()
+    {
+        var item = new TodoItem("Write report", Priority.Low);
+        var tag = new Tag("work");
+        item.AddTag(tag);
+
+        item.RemoveTag(tag);
+
+        Assert.Empty(item.Tags);
+    }
+
+    [Fact]
+    public void Ticket_link_can_be_removed()
+    {
+        var item = new TodoItem("Write report", Priority.Low);
+        var link = item.AddTicketLink("https://tickets.example.com/ABC-1");
+
+        item.RemoveTicketLink(link);
+
+        Assert.Empty(item.TicketLinks);
+    }
+
+    [Fact]
+    public void Free_text_dependency_can_be_removed()
+    {
+        var item = new TodoItem("Write report", Priority.Low);
+        var dependency = item.AddFreeTextDependency("Waiting for finance");
+
+        item.RemoveFreeTextDependency(dependency);
+
+        Assert.Empty(item.FreeTextDependencies);
+    }
 }

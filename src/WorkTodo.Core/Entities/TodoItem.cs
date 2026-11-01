@@ -61,6 +61,12 @@ public class TodoItem
         _tags.Add(tag);
     }
 
+    public void RemoveTag(Tag tag) => _tags.Remove(tag);
+
+    public void RemoveTicketLink(TicketLink link) => _ticketLinks.Remove(link);
+
+    public void RemoveFreeTextDependency(FreeTextDependency dependency) => _freeTextDependencies.Remove(dependency);
+
     public TicketLink AddTicketLink(string url, string? label = null)
     {
         var link = new TicketLink(url, label);
