@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WorkTodo.Core.Entities;
+using WorkTodo.Data.Extensions;
 
 namespace WorkTodo.Data.Repositories;
 
@@ -44,12 +45,12 @@ public class TodoDependencyRepository(AppDbContext context) : ITodoDependencyRep
     public async Task AddAsync(TodoDependency dependency, CancellationToken cancellationToken = default)
     {
         context.TodoDependencies.Add(dependency);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesOrResetAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(TodoDependency dependency, CancellationToken cancellationToken = default)
     {
         context.TodoDependencies.Remove(dependency);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesOrResetAsync(cancellationToken);
     }
 }

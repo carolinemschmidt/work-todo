@@ -1,4 +1,5 @@
 using WorkTodo.Core.Entities;
+using WorkTodo.Data.Exceptions;
 using WorkTodo.Data.Repositories;
 
 namespace WorkTodo.Services.Tests.Fakes;
@@ -7,6 +8,8 @@ internal sealed class FakeTagRepository : ITagRepository
 {
     private readonly List<Tag> _tags = [];
     private int _nextId = 1;
+    private bool _failNextAdd;
+    private Tag? _concurrentlyAdded;
 
     public IReadOnlyList<Tag> Tags => _tags;
 
@@ -32,8 +35,25 @@ internal sealed class FakeTagRepository : ITagRepository
             tag => string.Equals(tag.Name, name, StringComparison.OrdinalIgnoreCase)));
     }
 
+    public void FailNextAdd(Tag? concurrentlyAdded = null)
+    {
+        _failNextAdd = true;
+        _concurrentlyAdded = concurrentlyAdded;
+    }
+
     public Task AddAsync(Tag tag, CancellationToken cancellationToken = default)
     {
+        if (_failNextAdd)
+        {
+            _failNextAdd = false;
+            if (_concurrentlyAdded is not null)
+            {
+                Seed(_concurrentlyAdded);
+            }
+
+            throw new DataAccessException("Add failed.", new InvalidOperationException());
+        }
+
         EntityIds.Assign(tag, _nextId++);
         _tags.Add(tag);
         return Task.CompletedTask;

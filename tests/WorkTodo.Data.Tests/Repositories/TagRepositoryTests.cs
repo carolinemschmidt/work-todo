@@ -1,5 +1,6 @@
 using WorkTodo.Core.Entities;
 using WorkTodo.Core.Enums;
+using WorkTodo.Data.Exceptions;
 using WorkTodo.Data.Repositories;
 
 namespace WorkTodo.Data.Tests.Repositories;
@@ -61,6 +62,31 @@ public class TagRepositoryTests
         var tags = await new TagRepository(database.CreateContext()).GetAllAsync();
 
         Assert.Equal(["admin", "home"], tags.Select(tag => tag.Name));
+    }
+
+    [Fact]
+    public async Task Adding_a_duplicate_name_throws_a_data_access_exception()
+    {
+        using var database = new SqliteTestDatabase();
+        await new TagRepository(database.CreateContext()).AddAsync(new Tag("work"));
+
+        await Assert.ThrowsAsync<DataAccessException>(
+            () => new TagRepository(database.CreateContext()).AddAsync(new Tag("work")));
+    }
+
+    [Fact]
+    public async Task Repository_keeps_working_after_a_failed_add()
+    {
+        using var database = new SqliteTestDatabase();
+        var context = database.CreateContext();
+        var repository = new TagRepository(context);
+        await repository.AddAsync(new Tag("work"));
+        await Assert.ThrowsAsync<DataAccessException>(() => repository.AddAsync(new Tag("work")));
+
+        await repository.AddAsync(new Tag("home"));
+
+        var tags = await new TagRepository(database.CreateContext()).GetAllAsync();
+        Assert.Equal(["home", "work"], tags.Select(tag => tag.Name));
     }
 
     [Fact]

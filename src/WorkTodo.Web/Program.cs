@@ -5,7 +5,11 @@ using WorkTodo.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDataLayer(builder.Configuration.GetConnectionString(DatabaseConstants.ConnectionStringName)!);
+var connectionString = builder.Configuration.GetConnectionString(DatabaseConstants.ConnectionStringName)
+    ?? throw new InvalidOperationException(
+        $"Connection string '{DatabaseConstants.ConnectionStringName}' is missing from the configuration.");
+
+builder.Services.AddDataLayer(connectionString);
 builder.Services.AddServices();
 
 // Add services to the container.
