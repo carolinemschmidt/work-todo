@@ -86,6 +86,22 @@ public class SharedComponentTests : BunitContext
         Assert.Null(chosen);
     }
 
+    [Theory]
+    [InlineData("999")]
+    [InlineData("-1")]
+    [InlineData("NotAPriority")]
+    public void Enum_select_ignores_values_that_are_not_defined(string submitted)
+    {
+        var raised = false;
+        var cut = Render<EnumSelect<Priority>>(p => p
+            .Add(c => c.Label, "Priority")
+            .Add(c => c.ValueChanged, EventCallback.Factory.Create<Priority?>(this, _ => raised = true)));
+
+        cut.Find("select").Change(submitted);
+
+        Assert.False(raised);
+    }
+
     [Fact]
     public void Enum_select_marks_the_current_value_as_selected()
     {

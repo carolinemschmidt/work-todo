@@ -32,7 +32,16 @@
     private Task HandleChange(ChangeEventArgs args)
     {
         var text = args.Value?.ToString();
-        TEnum? value = string.IsNullOrEmpty(text) ? null : Enum.Parse<TEnum>(text);
-        return ValueChanged.InvokeAsync(value);
+        if (string.IsNullOrEmpty(text))
+        {
+            return ValueChanged.InvokeAsync(null);
+        }
+
+        return TryParseDefined(text, out var value) ? ValueChanged.InvokeAsync(value) : Task.CompletedTask;
+    }
+
+    private static bool TryParseDefined(string text, out TEnum value)
+    {
+        return Enum.TryParse(text, out value) && Enum.IsDefined(value);
     }
 }

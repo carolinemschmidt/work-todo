@@ -93,6 +93,30 @@ public class TodoItemTests
     }
 
     [Fact]
+    public void Undefined_priority_is_rejected_when_creating()
+    {
+        Assert.Throws<ArgumentException>(() => new TodoItem("Write report", (Priority)999));
+    }
+
+    [Fact]
+    public void Undefined_priority_is_rejected_when_updating()
+    {
+        var item = new TodoItem("Write report", Priority.Low);
+
+        Assert.Throws<ArgumentException>(() => item.Update("Write report", (Priority)999, null, null));
+        Assert.Equal(Priority.Low, item.Priority);
+    }
+
+    [Fact]
+    public void Undefined_status_is_rejected()
+    {
+        var item = new TodoItem("Write report", Priority.Low);
+
+        Assert.Throws<ArgumentException>(() => item.ChangeStatus((TodoStatus)999));
+        Assert.Equal(TodoStatus.NotStarted, item.Status);
+    }
+
+    [Fact]
     public void Tag_can_be_added()
     {
         var item = new TodoItem("Write report", Priority.Low);
