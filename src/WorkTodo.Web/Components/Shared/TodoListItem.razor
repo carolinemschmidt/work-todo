@@ -4,6 +4,10 @@
            href="@AppRoutes.Details(Item.Id)">@Item.Title</a>
         <div class="small text-muted">
             <PriorityBadge Priority="Item.Priority" />
+            @if (IsBlocked)
+            {
+                <span class="badge bg-dark me-1 blocked-badge">Blocked</span>
+            }
             <span class="me-2">@EnumDisplay.Text(Item.Status)</span>
             @if (Item.DueDate is { } dueDate)
             {
@@ -25,6 +29,9 @@
 @code {
     [Parameter, EditorRequired]
     public TodoItem Item { get; set; } = default!;
+
+    [Parameter]
+    public bool IsBlocked { get; set; }
 
     [Parameter]
     public EventCallback OnMarkDone { get; set; }

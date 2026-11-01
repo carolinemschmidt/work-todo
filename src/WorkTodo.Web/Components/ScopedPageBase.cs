@@ -18,16 +18,18 @@ public abstract class ScopedPageBase : OwningComponentBase
 
     protected ITagService TagService => ScopedServices.GetRequiredService<ITagService>();
 
-    protected async Task RunAsync(Func<Task> action)
+    protected async Task<bool> RunAsync(Func<Task> action)
     {
         ErrorMessage = null;
         try
         {
             await action();
+            return true;
         }
         catch (Exception exception) when (IsExpected(exception))
         {
             ErrorMessage = exception.Message;
+            return false;
         }
     }
 

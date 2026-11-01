@@ -7,7 +7,7 @@ public class FreeTextDependency
 {
     public FreeTextDependency(string text)
     {
-        Text = Guard.RequiredText(text, ValidationConstants.FreeTextDependencyMaxLength, nameof(text));
+        Text = Guard.RequiredText(text, ValidationConstants.FreeTextDependencyMaxLength, FieldLabels.FreeTextDependency);
     }
 
     public int Id { get; private set; }

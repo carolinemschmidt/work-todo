@@ -7,7 +7,7 @@ public class Tag
 {
     public Tag(string name)
     {
-        Name = Guard.RequiredText(name, ValidationConstants.TagNameMaxLength, nameof(name));
+        Name = Guard.RequiredText(name, ValidationConstants.TagNameMaxLength, FieldLabels.TagName);
     }
 
     public int Id { get; private set; }

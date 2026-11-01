@@ -38,4 +38,15 @@ public class NextUpServiceTests
 
         Assert.Equal("Blocker", Assert.Single(items).Title);
     }
+
+    [Fact]
+    public async Task Blocked_item_ids_are_returned()
+    {
+        _todos.Seed(TestData.CreateItem(1, "Blocked"), TestData.CreateItem(2, "Blocker"));
+        _dependencies.Seed(new TodoDependency(1, 2));
+
+        var blocked = await _service.GetBlockedIdsAsync();
+
+        Assert.Equal([1], blocked);
+    }
 }

@@ -97,6 +97,45 @@ public class TodoDetailsPageTests : WebTestBase
     }
 
     [Fact]
+    public async Task Failed_ticket_link_keeps_what_was_typed()
+    {
+        var item = await CreateTodoAsync("Write report");
+        var cut = RenderDetails(item.Id);
+
+        cut.Find("input[aria-label='Ticket URL']").Input("not a url");
+        cut.Find("form[aria-label='Add ticket link form']").Submit();
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".alert-danger")));
+        Assert.Equal("not a url", cut.Find("input[aria-label='Ticket URL']").GetAttribute("value"));
+    }
+
+    [Fact]
+    public async Task Blank_tag_shows_a_readable_message()
+    {
+        var item = await CreateTodoAsync("Write report");
+        var cut = RenderDetails(item.Id);
+
+        cut.Find("input[aria-label='New tag']").Input("   ");
+        cut.Find("form[aria-label='Add tag form']").Submit();
+
+        cut.WaitForAssertion(() => Assert.Equal("Tag name is required.", cut.Find(".alert-danger").TextContent.Trim()));
+    }
+
+    [Fact]
+    public async Task Too_long_free_text_dependency_shows_an_error_and_keeps_the_text()
+    {
+        var item = await CreateTodoAsync("Write report");
+        var cut = RenderDetails(item.Id);
+        var tooLong = new string('a', 501);
+
+        cut.Find("input[aria-label='New free-text dependency']").Input(tooLong);
+        cut.Find("form[aria-label='Add free-text dependency form']").Submit();
+
+        cut.WaitForAssertion(() => Assert.Contains("cannot be longer than", cut.Find(".alert-danger").TextContent));
+        Assert.Equal(tooLong, cut.Find("input[aria-label='New free-text dependency']").GetAttribute("value"));
+    }
+
+    [Fact]
     public async Task Dependency_on_another_item_can_be_added_and_removed()
     {
         var item = await CreateTodoAsync("Write report");
