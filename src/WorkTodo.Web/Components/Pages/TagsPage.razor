@@ -1,0 +1,68 @@
+@page "/tags"
+@inherits ScopedPageBase
+
+<PageTitle>Tags</PageTitle>
+
+<h1 class="h3 mb-3">Tags</h1>
+
+@if (ErrorMessage is not null)
+{
+    <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+}
+
+<form class="d-flex gap-2 mb-3" @onsubmit="AddAsync">
+    <input class="form-control" aria-label="New tag name" placeholder="New tag"
+           @bind="_newName" @bind:event="oninput" />
+    <button type="submit" class="btn btn-primary">Add tag</button>
+</form>
+
+@if (_loaded && _tags.Count == 0)
+{
+    <p class="text-muted">No tags yet.</p>
+}
+else
+{
+    <ul class="list-group tag-list">
+        @foreach (var tag in _tags)
+        {
+            <li class="list-group-item d-flex align-items-center">
+                <span class="flex-grow-1">@tag.Name</span>
+                <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Delete tag @tag.Name"
+                        @onclick="() => DeleteAsync(tag)">Delete</button>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private IReadOnlyList<Tag> _tags = [];
+    private string _newName = string.Empty;
+    private bool _loaded;
+
+    protected override Task OnInitializedAsync() => RunAsync(ReloadAsync);
+
+    private async Task ReloadAsync()
+    {
+        _tags = await TagService.GetAllAsync();
+        _loaded = true;
+    }
+
+    private Task AddAsync()
+    {
+        return RunAsync(async () =>
+        {
+            await TagService.GetOrCreateAsync(_newName);
+            _newName = string.Empty;
+            await ReloadAsync();
+        });
+    }
+
+    private Task DeleteAsync(Tag tag)
+    {
+        return RunAsync(async () =>
+        {
+            await TagService.DeleteAsync(tag.Id);
+            await ReloadAsync();
+        });
+    }
+}

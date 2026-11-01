@@ -1,0 +1,46 @@
+<ul class="list-group mb-2">
+    @foreach (var dependency in Dependencies)
+    {
+        <li class="list-group-item d-flex align-items-center gap-2">
+            <input type="checkbox" class="form-check-input mt-0" checked="@dependency.IsResolved"
+                   aria-label="Resolved: @dependency.Text" @onchange="() => OnToggle.InvokeAsync(dependency)" />
+            <span class="flex-grow-1 @(dependency.IsResolved ? "text-decoration-line-through text-muted" : null)">@dependency.Text</span>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    aria-label="Remove free-text dependency @dependency.Text"
+                    @onclick="() => OnRemove.InvokeAsync(dependency)">Remove</button>
+        </li>
+    }
+</ul>
+
+<form class="d-flex gap-2" aria-label="Add free-text dependency form" @onsubmit="AddAsync">
+    <input class="form-control" aria-label="New free-text dependency" placeholder="Something this is waiting for"
+           @bind="_newText" @bind:event="oninput" />
+    <button type="submit" class="btn btn-outline-primary">Add</button>
+</form>
+
+@code {
+    private string _newText = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyCollection<FreeTextDependency> Dependencies { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string> OnAdd { get; set; }
+
+    [Parameter]
+    public EventCallback<FreeTextDependency> OnToggle { get; set; }
+
+    [Parameter]
+    public EventCallback<FreeTextDependency> OnRemove { get; set; }
+
+    private async Task AddAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newText))
+        {
+            return;
+        }
+
+        await OnAdd.InvokeAsync(_newText);
+        _newText = string.Empty;
+    }
+}

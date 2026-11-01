@@ -1,0 +1,15 @@
+<span class="badge bg-secondary me-1">
+    @Name
+    @if (OnRemove.HasDelegate)
+    {
+        <button type="button" class="btn-close btn-close-white ms-1" aria-label="Remove tag @Name" @onclick="OnRemove"></button>
+    }
+</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnRemove { get; set; }
+}

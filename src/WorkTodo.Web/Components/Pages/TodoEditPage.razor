@@ -1,0 +1,127 @@
+@page "/todos/new"
+@page "/todos/{Id:int}/edit"
+@using WorkTodo.Web.Models
+@inherits ScopedPageBase
+@inject NavigationManager Navigation
+
+<PageTitle>@Heading</PageTitle>
+
+<h1 class="h3 mb-3">@Heading</h1>
+
+@if (ErrorMessage is not null)
+{
+    <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+}
+
+@if (IsNew || _loaded)
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label class="form-label" for="todo-title">Title</label>
+            <InputText id="todo-title" class="form-control" aria-label="Title" @bind-Value="_model.Title" />
+            <ValidationMessage For="() => _model.Title" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="todo-description">Description</label>
+            <InputTextArea id="todo-description" class="form-control" rows="4" aria-label="Description"
+                           @bind-Value="_model.Description" />
+            <ValidationMessage For="() => _model.Description" />
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-sm-4">
+                <label class="form-label">Priority</label>
+                <EnumSelect TEnum="Priority" Label="Priority" Value="_model.Priority" ValueChanged="SetPriority" />
+            </div>
+            @if (!IsNew)
+            {
+                <div class="col-sm-4">
+                    <label class="form-label">Status</label>
+                    <EnumSelect TEnum="TodoStatus" Label="Status" Value="_model.Status" ValueChanged="SetStatus" />
+                </div>
+            }
+            <div class="col-sm-4">
+                <label class="form-label" for="todo-due-date">Due date</label>
+                <InputDate TValue="DateOnly?" id="todo-due-date" class="form-control" aria-label="Due date"
+                           @bind-Value="_model.DueDate" />
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a class="btn btn-outline-secondary" href="@CancelRoute">Cancel</a>
+    </EditForm>
+}
+
+@code {
+    private TodoFormModel _model = new();
+    private bool _loaded;
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    private bool IsNew => Id is null;
+
+    private string Heading => IsNew ? "New todo" : "Edit todo";
+
+    private string CancelRoute => Id is { } id ? AppRoutes.Details(id) : AppRoutes.Home;
+
+    protected override Task OnParametersSetAsync()
+    {
+        return Id is { } id ? RunAsync(() => LoadAsync(id)) : Task.CompletedTask;
+    }
+
+    private async Task LoadAsync(int id)
+    {
+        var item = await TodoService.GetAsync(id);
+        _model = new TodoFormModel
+        {
+            Title = item.Title,
+            Description = item.Description,
+            Priority = item.Priority,
+            Status = item.Status,
+            DueDate = item.DueDate,
+        };
+        _loaded = true;
+    }
+
+    private void SetPriority(Priority? priority)
+    {
+        if (priority is { } value)
+        {
+            _model.Priority = value;
+        }
+    }
+
+    private void SetStatus(TodoStatus? status)
+    {
+        if (status is { } value)
+        {
+            _model.Status = value;
+        }
+    }
+
+    private Task SaveAsync()
+    {
+        return RunAsync(async () =>
+        {
+            var id = Id is { } existingId ? await UpdateAsync(existingId) : await CreateAsync();
+            Navigation.NavigateTo(AppRoutes.Details(id));
+        });
+    }
+
+    private async Task<int> CreateAsync()
+    {
+        var item = await TodoService.CreateAsync(_model.Title, _model.Priority, _model.Description, _model.DueDate);
+        return item.Id;
+    }
+
+    private async Task<int> UpdateAsync(int id)
+    {
+        await TodoService.UpdateAsync(id, _model.Title, _model.Priority, _model.Description, _model.DueDate);
+        await TodoService.ChangeStatusAsync(id, _model.Status);
+        return id;
+    }
+}
