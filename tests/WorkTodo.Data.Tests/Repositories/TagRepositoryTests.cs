@@ -19,6 +19,28 @@ public class TagRepositoryTests
     }
 
     [Fact]
+    public async Task Added_tag_can_be_found_by_id()
+    {
+        using var database = new SqliteTestDatabase();
+        var saved = new Tag("work");
+        await new TagRepository(database.CreateContext()).AddAsync(saved);
+
+        var tag = await new TagRepository(database.CreateContext()).GetByIdAsync(saved.Id);
+
+        Assert.Equal("work", tag!.Name);
+    }
+
+    [Fact]
+    public async Task Unknown_id_returns_null()
+    {
+        using var database = new SqliteTestDatabase();
+
+        var tag = await new TagRepository(database.CreateContext()).GetByIdAsync(42);
+
+        Assert.Null(tag);
+    }
+
+    [Fact]
     public async Task Unknown_name_returns_null()
     {
         using var database = new SqliteTestDatabase();

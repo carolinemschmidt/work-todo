@@ -10,6 +10,11 @@ public class TagRepository(AppDbContext context) : ITagRepository
         return await context.Tags.OrderBy(tag => tag.Name).ToListAsync(cancellationToken);
     }
 
+    public async Task<Tag?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await context.Tags.FirstOrDefaultAsync(tag => tag.Id == id, cancellationToken);
+    }
+
     public async Task<Tag?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         return await context.Tags.FirstOrDefaultAsync(tag => tag.Name == name, cancellationToken);
