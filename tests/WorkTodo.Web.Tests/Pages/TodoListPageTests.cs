@@ -25,11 +25,24 @@ public class TodoListPageTests : WebTestBase
     }
 
     [Fact]
-    public void Shows_a_message_when_there_are_no_todos()
+    public void Invites_to_create_the_first_todo_when_there_are_none()
     {
         var cut = Render<TodoListPage>();
 
-        cut.WaitForAssertion(() => Assert.Contains("No todos found", cut.Markup));
+        cut.WaitForAssertion(() => Assert.Contains("No todos yet", cut.Markup));
+        Assert.Equal("/todos/new", cut.Find("p a").GetAttribute("href"));
+    }
+
+    [Fact]
+    public async Task Says_that_filters_hide_everything_when_nothing_matches()
+    {
+        await CreateTodoAsync("Low item", Priority.Low);
+        var cut = Render<TodoListPage>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".todo-item")));
+
+        cut.Find("select[aria-label='Filter by priority']").Change("Critical");
+
+        cut.WaitForAssertion(() => Assert.Contains("No todos match these filters", cut.Markup));
     }
 
     [Fact]
@@ -80,6 +93,25 @@ public class TodoListPageTests : WebTestBase
         cut.Find("select[aria-label='Filter by tag']").Change(tagId.ToString());
 
         cut.WaitForAssertion(() => Assert.Equal(["Tagged item"], Titles(cut)));
+    }
+
+    [Fact]
+    public async Task Blocked_items_are_marked_as_blocked()
+    {
+        var blocked = await CreateTodoAsync("Blocked item");
+        var blocker = await CreateTodoAsync("Blocker item");
+        await UseServicesAsync(async services =>
+        {
+            await services.GetRequiredService<IDependencyService>().AddDependencyAsync(blocked.Id, blocker.Id);
+            return 0;
+        });
+
+        var cut = Render<TodoListPage>();
+
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".todo-item").Count));
+        var items = cut.FindAll(".todo-item");
+        Assert.NotNull(items.Single(item => item.TextContent.Contains("Blocked item")).QuerySelector(".blocked-badge"));
+        Assert.Null(items.Single(item => item.TextContent.Contains("Blocker item")).QuerySelector(".blocked-badge"));
     }
 
     [Fact]

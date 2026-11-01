@@ -87,4 +87,49 @@ public class NextUpSelectorTests
 
         Assert.Equal(["Critical", "Low"], result.Select(item => item.Title));
     }
+
+    [Fact]
+    public void Item_waiting_on_an_unfinished_item_is_blocked()
+    {
+        var items = new[] { TestData.CreateItem(1), TestData.CreateItem(2) };
+        var dependencies = new[] { new TodoDependency(1, 2) };
+
+        var blocked = NextUpSelector.FindBlockedIds(items, dependencies);
+
+        Assert.Equal([1], blocked);
+    }
+
+    [Fact]
+    public void Item_with_an_unresolved_free_text_dependency_is_blocked()
+    {
+        var item = TestData.CreateItem(1);
+        item.AddFreeTextDependency("Waiting for finance");
+
+        var blocked = NextUpSelector.FindBlockedIds([item], []);
+
+        Assert.Equal([1], blocked);
+    }
+
+    [Fact]
+    public void Item_is_not_blocked_once_its_blockers_are_finished_or_resolved()
+    {
+        var item = TestData.CreateItem(1);
+        item.AddFreeTextDependency("Waiting for finance").Resolve();
+        var finished = TestData.CreateItem(2, status: TodoStatus.Done);
+
+        var blocked = NextUpSelector.FindBlockedIds([item, finished], [new TodoDependency(1, 2)]);
+
+        Assert.Empty(blocked);
+    }
+
+    [Fact]
+    public void Finished_items_are_never_blocked()
+    {
+        var finished = TestData.CreateItem(1, status: TodoStatus.Done);
+        finished.AddFreeTextDependency("Waiting for finance");
+
+        var blocked = NextUpSelector.FindBlockedIds([finished], []);
+
+        Assert.Empty(blocked);
+    }
 }

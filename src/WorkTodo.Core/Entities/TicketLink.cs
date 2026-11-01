@@ -10,7 +10,7 @@ public class TicketLink
     public TicketLink(string url, string? label = null)
     {
         Url = ValidatedUrl(url);
-        Label = Guard.OptionalText(label, ValidationConstants.TicketLabelMaxLength, nameof(label));
+        Label = Guard.OptionalText(label, ValidationConstants.TicketLabelMaxLength, FieldLabels.TicketLabel);
     }
 
     public int Id { get; private set; }
@@ -21,11 +21,11 @@ public class TicketLink
 
     private static string ValidatedUrl(string? url)
     {
-        var trimmed = Guard.RequiredText(url, ValidationConstants.TicketUrlMaxLength, nameof(url));
+        var trimmed = Guard.RequiredText(url, ValidationConstants.TicketUrlMaxLength, FieldLabels.TicketUrl);
 
         if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri) || !AllowedSchemes.Contains(uri.Scheme))
         {
-            throw new ArgumentException("Value must be an absolute http or https URL.", nameof(url));
+            throw new ArgumentException($"{FieldLabels.TicketUrl} must be an absolute http or https URL.");
         }
 
         return trimmed;

@@ -16,7 +16,11 @@
     <button type="submit" class="btn btn-primary">Add tag</button>
 </form>
 
-@if (_loaded && _tags.Count == 0)
+@if (!_loaded)
+{
+    <LoadingIndicator />
+}
+else if (_tags.Count == 0)
 {
     <p class="text-muted">No tags yet.</p>
 }

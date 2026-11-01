@@ -9,6 +9,14 @@ namespace WorkTodo.Web.Tests.Components;
 public class SharedComponentTests : BunitContext
 {
     [Fact]
+    public void Loading_indicator_announces_itself_as_a_status()
+    {
+        var cut = Render<LoadingIndicator>();
+
+        Assert.Contains("Loading", cut.Find("[role='status']").TextContent);
+    }
+
+    [Fact]
     public void Tag_badge_shows_the_name_without_a_remove_button_by_default()
     {
         var cut = Render<TagBadge>(p => p.Add(c => c.Name, "work"));
@@ -123,9 +131,14 @@ public class SharedComponentTests : BunitContext
     public void Free_text_dependency_list_raises_the_add_callback_with_the_typed_text()
     {
         string? added = null;
+        Func<string, Task<bool>> onAdd = text =>
+        {
+            added = text;
+            return Task.FromResult(true);
+        };
         var cut = Render<FreeTextDependencyList>(p => p
             .Add(c => c.Dependencies, [])
-            .Add(c => c.OnAdd, EventCallback.Factory.Create<string>(this, text => added = text)));
+            .Add(c => c.OnAdd, onAdd));
 
         cut.Find("input[aria-label='New free-text dependency']").Input("Waiting for finance");
         cut.Find("form").Submit();
@@ -137,13 +150,49 @@ public class SharedComponentTests : BunitContext
     public void Free_text_dependency_list_ignores_blank_text()
     {
         var called = false;
+        Func<string, Task<bool>> onAdd = _ =>
+        {
+            called = true;
+            return Task.FromResult(true);
+        };
         var cut = Render<FreeTextDependencyList>(p => p
             .Add(c => c.Dependencies, [])
-            .Add(c => c.OnAdd, EventCallback.Factory.Create<string>(this, _ => called = true)));
+            .Add(c => c.OnAdd, onAdd));
 
         cut.Find("input[aria-label='New free-text dependency']").Input("   ");
         cut.Find("form").Submit();
 
         Assert.False(called);
+    }
+
+    [Fact]
+    public void Free_text_dependency_list_clears_the_text_after_a_successful_add()
+    {
+        Func<string, Task<bool>> onAdd = _ => Task.FromResult(true);
+        var cut = Render<FreeTextDependencyList>(p => p
+            .Add(c => c.Dependencies, [])
+            .Add(c => c.OnAdd, onAdd));
+        cut.Find("input[aria-label='New free-text dependency']").Input("Waiting for finance");
+
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() =>
+            Assert.Equal(string.Empty, cut.Find("input[aria-label='New free-text dependency']").GetAttribute("value")));
+    }
+
+    [Fact]
+    public void Free_text_dependency_list_keeps_the_text_when_the_add_fails()
+    {
+        Func<string, Task<bool>> onAdd = _ => Task.FromResult(false);
+        var cut = Render<FreeTextDependencyList>(p => p
+            .Add(c => c.Dependencies, [])
+            .Add(c => c.OnAdd, onAdd));
+        cut.Find("input[aria-label='New free-text dependency']").Input("Waiting for finance");
+
+        cut.Find("form").Submit();
+
+        Assert.Equal(
+            "Waiting for finance",
+            cut.Find("input[aria-label='New free-text dependency']").GetAttribute("value"));
     }
 }

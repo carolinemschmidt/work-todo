@@ -10,20 +10,31 @@ public static class NextUpSelector
         IEnumerable<TodoDependency> dependencies)
     {
         var itemList = items.ToList();
+        var blockedIds = FindBlockedIds(itemList, dependencies);
+        var ready = itemList.Where(item => item.Status != TodoStatus.Done && !blockedIds.Contains(item.Id));
+
+        return TodoOrdering.ByUrgency(ready).ToList();
+    }
+
+    public static IReadOnlySet<int> FindBlockedIds(
+        IEnumerable<TodoItem> items,
+        IEnumerable<TodoDependency> dependencies)
+    {
+        var itemList = items.ToList();
         var unfinishedIds = itemList
             .Where(item => item.Status != TodoStatus.Done)
             .Select(item => item.Id)
             .ToHashSet();
-        var blockedByItemIds = dependencies
+        var waitingOnUnfinishedIds = dependencies
             .Where(dependency => unfinishedIds.Contains(dependency.DependsOnTodoItemId))
             .Select(dependency => dependency.TodoItemId)
             .ToHashSet();
 
-        var unblocked = itemList.Where(item =>
-            item.Status != TodoStatus.Done
-            && !blockedByItemIds.Contains(item.Id)
-            && item.FreeTextDependencies.All(dependency => dependency.IsResolved));
-
-        return TodoOrdering.ByUrgency(unblocked).ToList();
+        return itemList
+            .Where(item => unfinishedIds.Contains(item.Id))
+            .Where(item => waitingOnUnfinishedIds.Contains(item.Id)
+                || item.FreeTextDependencies.Any(dependency => !dependency.IsResolved))
+            .Select(item => item.Id)
+            .ToHashSet();
     }
 }

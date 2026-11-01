@@ -36,18 +36,22 @@
 
 @if (!_loaded)
 {
-    <p class="text-muted">Loading…</p>
+    <LoadingIndicator />
+}
+else if (_items.Count == 0 && HasFilter)
+{
+    <p class="text-muted">No todos match these filters.</p>
 }
 else if (_items.Count == 0)
 {
-    <p class="text-muted">No todos found.</p>
+    <p class="text-muted">No todos yet. <a href="@AppRoutes.NewTodo">Create your first todo</a>.</p>
 }
 else
 {
     <ul class="list-group">
         @foreach (var item in _items)
         {
-            <TodoListItem Item="item" OnMarkDone="() => MarkDoneAsync(item)" />
+            <TodoListItem Item="item" IsBlocked="_blockedIds.Contains(item.Id)" OnMarkDone="() => MarkDoneAsync(item)" />
         }
     </ul>
 }
@@ -55,10 +59,13 @@ else
 @code {
     private IReadOnlyList<Tag> _tags = [];
     private IReadOnlyList<TodoItem> _items = [];
+    private IReadOnlySet<int> _blockedIds = new HashSet<int>();
     private int? _tagId;
     private Priority? _priority;
     private TodoStatus? _status;
     private bool _loaded;
+
+    private bool HasFilter => _tagId is not null || _priority is not null || _status is not null;
 
     protected override Task OnInitializedAsync() => RunAsync(ReloadAsync);
 
@@ -66,6 +73,7 @@ else
     {
         _tags = await TagService.GetAllAsync();
         _items = await TodoService.GetAllAsync(new TodoFilter(_tagId, _priority, _status));
+        _blockedIds = await NextUpService.GetBlockedIdsAsync();
         _loaded = true;
     }
 
