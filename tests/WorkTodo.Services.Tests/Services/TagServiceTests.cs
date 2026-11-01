@@ -1,3 +1,4 @@
+using WorkTodo.Data.Exceptions;
 using WorkTodo.Services.Exceptions;
 using WorkTodo.Services.Tests.Fakes;
 
@@ -42,6 +43,26 @@ public class TagServiceTests
 
         Assert.Same(existing, tag);
         Assert.Single(_tags.Tags);
+    }
+
+    [Fact]
+    public async Task Tag_added_concurrently_is_returned_instead_of_failing()
+    {
+        var concurrentlyAdded = TestData.CreateTag(7, "work");
+        _tags.FailNextAdd(concurrentlyAdded);
+
+        var tag = await _service.GetOrCreateAsync("work");
+
+        Assert.Same(concurrentlyAdded, tag);
+        Assert.Single(_tags.Tags);
+    }
+
+    [Fact]
+    public async Task Failed_add_without_a_concurrent_tag_is_rethrown()
+    {
+        _tags.FailNextAdd();
+
+        await Assert.ThrowsAsync<DataAccessException>(() => _service.GetOrCreateAsync("work"));
     }
 
     [Fact]

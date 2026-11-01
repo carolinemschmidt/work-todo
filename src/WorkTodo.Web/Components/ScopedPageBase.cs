@@ -1,14 +1,21 @@
+using System.Data.Common;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using WorkTodo.Core.Exceptions;
+using WorkTodo.Data.Exceptions;
 using WorkTodo.Services;
 using WorkTodo.Services.Exceptions;
+using WorkTodo.Web.Constants;
 
 namespace WorkTodo.Web.Components;
 
 public abstract class ScopedPageBase : OwningComponentBase
 {
     protected string? ErrorMessage { get; private set; }
+
+    [Inject]
+    private ILogger<ScopedPageBase> Logger { get; set; } = default!;
 
     protected ITodoService TodoService => ScopedServices.GetRequiredService<ITodoService>();
 
@@ -31,6 +38,12 @@ public abstract class ScopedPageBase : OwningComponentBase
             ErrorMessage = exception.Message;
             return false;
         }
+        catch (Exception exception) when (IsDatabaseFailure(exception))
+        {
+            Logger.LogError(exception, "Database operation failed");
+            ErrorMessage = UiConstants.DatabaseErrorMessage;
+            return false;
+        }
     }
 
     private static bool IsExpected(Exception exception)
@@ -39,5 +52,10 @@ public abstract class ScopedPageBase : OwningComponentBase
             or NotFoundException
             or SelfDependencyException
             or CircularDependencyException;
+    }
+
+    private static bool IsDatabaseFailure(Exception exception)
+    {
+        return exception is DataAccessException or DbException;
     }
 }

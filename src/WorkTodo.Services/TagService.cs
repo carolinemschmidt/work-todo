@@ -1,4 +1,5 @@
 using WorkTodo.Core.Entities;
+using WorkTodo.Data.Exceptions;
 using WorkTodo.Data.Repositories;
 using WorkTodo.Services.Exceptions;
 
@@ -14,14 +15,8 @@ public class TagService(ITagRepository tags) : ITagService
     public async Task<Tag> GetOrCreateAsync(string name, CancellationToken cancellationToken = default)
     {
         var candidate = new Tag(name);
-        var existing = await tags.GetByNameAsync(candidate.Name, cancellationToken);
-        if (existing is not null)
-        {
-            return existing;
-        }
-
-        await tags.AddAsync(candidate, cancellationToken);
-        return candidate;
+        return await tags.GetByNameAsync(candidate.Name, cancellationToken)
+            ?? await AddOrFindConcurrentlyAddedAsync(candidate, cancellationToken);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -30,5 +25,24 @@ public class TagService(ITagRepository tags) : ITagService
             ?? throw new NotFoundException(nameof(Tag), id);
 
         await tags.DeleteAsync(tag, cancellationToken);
+    }
+
+    private async Task<Tag> AddOrFindConcurrentlyAddedAsync(Tag candidate, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await tags.AddAsync(candidate, cancellationToken);
+            return candidate;
+        }
+        catch (DataAccessException)
+        {
+            var concurrentlyAdded = await tags.GetByNameAsync(candidate.Name, cancellationToken);
+            if (concurrentlyAdded is null)
+            {
+                throw;
+            }
+
+            return concurrentlyAdded;
+        }
     }
 }

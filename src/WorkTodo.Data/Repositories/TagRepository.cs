@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WorkTodo.Core.Entities;
+using WorkTodo.Data.Extensions;
 
 namespace WorkTodo.Data.Repositories;
 
@@ -23,12 +24,12 @@ public class TagRepository(AppDbContext context) : ITagRepository
     public async Task AddAsync(Tag tag, CancellationToken cancellationToken = default)
     {
         context.Tags.Add(tag);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesOrResetAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(Tag tag, CancellationToken cancellationToken = default)
     {
         context.Tags.Remove(tag);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesOrResetAsync(cancellationToken);
     }
 }

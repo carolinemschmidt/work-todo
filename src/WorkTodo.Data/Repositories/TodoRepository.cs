@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WorkTodo.Core.Entities;
+using WorkTodo.Data.Extensions;
 
 namespace WorkTodo.Data.Repositories;
 
@@ -26,12 +27,12 @@ public class TodoRepository(AppDbContext context) : ITodoRepository
     public async Task AddAsync(TodoItem item, CancellationToken cancellationToken = default)
     {
         context.TodoItems.Add(item);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesOrResetAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(TodoItem item, CancellationToken cancellationToken = default)
     {
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesOrResetAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(TodoItem item, CancellationToken cancellationToken = default)
@@ -42,7 +43,7 @@ public class TodoRepository(AppDbContext context) : ITodoRepository
 
         context.TodoDependencies.RemoveRange(dependenciesOnItem);
         context.TodoItems.Remove(item);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesOrResetAsync(cancellationToken);
     }
 
     private IQueryable<TodoItem> WithRelations()
