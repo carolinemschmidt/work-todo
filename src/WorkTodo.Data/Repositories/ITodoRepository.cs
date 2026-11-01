@@ -6,6 +6,8 @@ public interface ITodoRepository
 {
     Task<TodoItem?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<TodoItem>> GetByIdsAsync(IReadOnlyCollection<int> ids, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<TodoItem>> GetAllAsync(CancellationToken cancellationToken = default);
 
     Task AddAsync(TodoItem item, CancellationToken cancellationToken = default);

@@ -17,13 +17,12 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
         await todos.GetRequiredAsync(todoItemId, cancellationToken);
         await todos.GetRequiredAsync(dependsOnTodoItemId, cancellationToken);
 
-        var existing = await dependencies.GetAllAsync(cancellationToken);
-        if (existing.Any(dependency => Matches(dependency, todoItemId, dependsOnTodoItemId)))
+        if (await dependencies.GetAsync(todoItemId, dependsOnTodoItemId, cancellationToken) is not null)
         {
             return;
         }
 
-        DependencyRules.EnsureCanAdd(todoItemId, dependsOnTodoItemId, existing);
+        await EnsureNoCycleAsync(todoItemId, dependsOnTodoItemId, cancellationToken);
         await dependencies.AddAsync(new TodoDependency(todoItemId, dependsOnTodoItemId), cancellationToken);
     }
 
@@ -32,8 +31,7 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
         int dependsOnTodoItemId,
         CancellationToken cancellationToken = default)
     {
-        var existing = await dependencies.GetAllAsync(cancellationToken);
-        var dependency = existing.FirstOrDefault(candidate => Matches(candidate, todoItemId, dependsOnTodoItemId));
+        var dependency = await dependencies.GetAsync(todoItemId, dependsOnTodoItemId, cancellationToken);
         if (dependency is not null)
         {
             await dependencies.DeleteAsync(dependency, cancellationToken);
@@ -44,11 +42,7 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
         int todoItemId,
         CancellationToken cancellationToken = default)
     {
-        var related = await dependencies.GetAllAsync(cancellationToken);
-        var ids = related
-            .Where(dependency => dependency.TodoItemId == todoItemId)
-            .Select(dependency => dependency.DependsOnTodoItemId);
-
+        var ids = await dependencies.GetDependsOnIdsAsync(todoItemId, cancellationToken);
         return await GetOrderedItemsAsync(ids, cancellationToken);
     }
 
@@ -56,11 +50,7 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
         int todoItemId,
         CancellationToken cancellationToken = default)
     {
-        var related = await dependencies.GetAllAsync(cancellationToken);
-        var ids = related
-            .Where(dependency => dependency.DependsOnTodoItemId == todoItemId)
-            .Select(dependency => dependency.TodoItemId);
-
+        var ids = await dependencies.GetDependentIdsAsync(todoItemId, cancellationToken);
         return await GetOrderedItemsAsync(ids, cancellationToken);
     }
 
@@ -104,18 +94,21 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
         await todos.UpdateAsync(item, cancellationToken);
     }
 
-    private async Task<IReadOnlyList<TodoItem>> GetOrderedItemsAsync(
-        IEnumerable<int> ids,
+    private async Task EnsureNoCycleAsync(
+        int todoItemId,
+        int dependsOnTodoItemId,
         CancellationToken cancellationToken)
     {
-        var wanted = ids.ToHashSet();
-        var items = await todos.GetAllAsync(cancellationToken);
-        return TodoOrdering.ByUrgency(items.Where(item => wanted.Contains(item.Id))).ToList();
+        var existing = await dependencies.GetAllAsync(cancellationToken);
+        DependencyRules.EnsureCanAdd(todoItemId, dependsOnTodoItemId, existing);
     }
 
-    private static bool Matches(TodoDependency dependency, int todoItemId, int dependsOnTodoItemId)
+    private async Task<IReadOnlyList<TodoItem>> GetOrderedItemsAsync(
+        IReadOnlyCollection<int> ids,
+        CancellationToken cancellationToken)
     {
-        return dependency.TodoItemId == todoItemId && dependency.DependsOnTodoItemId == dependsOnTodoItemId;
+        var items = await todos.GetByIdsAsync(ids, cancellationToken);
+        return TodoOrdering.ByUrgency(items).ToList();
     }
 
     private static FreeTextDependency FindFreeTextDependency(TodoItem item, int dependencyId)

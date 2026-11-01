@@ -10,6 +10,14 @@ public class TodoRepository(AppDbContext context) : ITodoRepository
         return await WithRelations().FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<TodoItem>> GetByIdsAsync(
+        IReadOnlyCollection<int> ids,
+        CancellationToken cancellationToken = default)
+    {
+        var wanted = ids.ToList();
+        return await WithRelations().Where(item => wanted.Contains(item.Id)).ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<TodoItem>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await WithRelations().ToListAsync(cancellationToken);

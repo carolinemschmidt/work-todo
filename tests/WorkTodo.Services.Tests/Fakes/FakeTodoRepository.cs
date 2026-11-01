@@ -24,6 +24,13 @@ internal sealed class FakeTodoRepository : ITodoRepository
         return Task.FromResult(_items.FirstOrDefault(item => item.Id == id));
     }
 
+    public Task<IReadOnlyList<TodoItem>> GetByIdsAsync(
+        IReadOnlyCollection<int> ids,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<TodoItem>>(_items.Where(item => ids.Contains(item.Id)).ToList());
+    }
+
     public Task<IReadOnlyList<TodoItem>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return Task.FromResult<IReadOnlyList<TodoItem>>(_items.ToList());
