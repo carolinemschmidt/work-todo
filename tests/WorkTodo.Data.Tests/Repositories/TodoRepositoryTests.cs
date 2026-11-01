@@ -19,6 +19,35 @@ public class TodoRepositoryTests
     }
 
     [Fact]
+    public async Task Only_items_with_the_requested_ids_are_returned_with_their_relations()
+    {
+        using var database = new SqliteTestDatabase();
+        var wanted = new TodoItem("Wanted", Priority.Low);
+        wanted.AddTag(new Tag("work"));
+        var other = new TodoItem("Other", Priority.Low);
+        var writer = new TodoRepository(database.CreateContext());
+        await writer.AddAsync(wanted);
+        await writer.AddAsync(other);
+
+        var items = await new TodoRepository(database.CreateContext()).GetByIdsAsync([wanted.Id, 999]);
+
+        var loaded = Assert.Single(items);
+        Assert.Equal("Wanted", loaded.Title);
+        Assert.Equal("work", Assert.Single(loaded.Tags).Name);
+    }
+
+    [Fact]
+    public async Task No_requested_ids_returns_no_items()
+    {
+        using var database = new SqliteTestDatabase();
+        await new TodoRepository(database.CreateContext()).AddAsync(new TodoItem("Item", Priority.Low));
+
+        var items = await new TodoRepository(database.CreateContext()).GetByIdsAsync([]);
+
+        Assert.Empty(items);
+    }
+
+    [Fact]
     public async Task Unknown_id_returns_null()
     {
         using var database = new SqliteTestDatabase();

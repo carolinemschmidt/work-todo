@@ -1,0 +1,35 @@
+<section class="mb-4">
+    <h2 class="h5">Tags</h2>
+    <div class="tag-list mb-2">
+        @foreach (var tag in Tags)
+        {
+            <TagBadge Name="@tag.Name" OnRemove="() => OnRemove.InvokeAsync(tag)" />
+        }
+    </div>
+    <form class="d-flex gap-2" aria-label="Add tag form" @onsubmit="AddAsync">
+        <input class="form-control" aria-label="New tag" placeholder="Add a tag"
+               @bind="_newTag" @bind:event="oninput" />
+        <button type="submit" class="btn btn-outline-primary text-nowrap">Add tag</button>
+    </form>
+</section>
+
+@code {
+    private string _newTag = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyCollection<Tag> Tags { get; set; } = [];
+
+    [Parameter]
+    public Func<string, Task<bool>>? OnAdd { get; set; }
+
+    [Parameter]
+    public EventCallback<Tag> OnRemove { get; set; }
+
+    private async Task AddAsync()
+    {
+        if (OnAdd is not null && await OnAdd(_newTag))
+        {
+            _newTag = string.Empty;
+        }
+    }
+}

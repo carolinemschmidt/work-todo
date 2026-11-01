@@ -1,0 +1,49 @@
+<section class="mb-4">
+    <h2 class="h5">Tickets</h2>
+    <ul class="list-group mb-2">
+        @foreach (var link in Links)
+        {
+            <li class="list-group-item d-flex align-items-center gap-2">
+                <a class="ticket-link flex-grow-1" href="@link.Url" target="_blank" rel="noopener noreferrer">@(link.Label ?? link.Url)</a>
+                <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Remove link @(link.Label ?? link.Url)"
+                        @onclick="() => OnRemove.InvokeAsync(link)">Remove</button>
+            </li>
+        }
+    </ul>
+    <form class="row g-2" aria-label="Add ticket link form" @onsubmit="AddAsync">
+        <div class="col-sm-6">
+            <input class="form-control" aria-label="Ticket URL" placeholder="https://…"
+                   @bind="_url" @bind:event="oninput" />
+        </div>
+        <div class="col-sm-4">
+            <input class="form-control" aria-label="Ticket label" placeholder="Label (optional)"
+                   @bind="_label" @bind:event="oninput" />
+        </div>
+        <div class="col-sm-2">
+            <button type="submit" class="btn btn-outline-primary w-100 text-nowrap">Add link</button>
+        </div>
+    </form>
+</section>
+
+@code {
+    private string _url = string.Empty;
+    private string _label = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyCollection<TicketLink> Links { get; set; } = [];
+
+    [Parameter]
+    public Func<string, string, Task<bool>>? OnAdd { get; set; }
+
+    [Parameter]
+    public EventCallback<TicketLink> OnRemove { get; set; }
+
+    private async Task AddAsync()
+    {
+        if (OnAdd is not null && await OnAdd(_url, _label))
+        {
+            _url = string.Empty;
+            _label = string.Empty;
+        }
+    }
+}

@@ -1,0 +1,57 @@
+<section class="mb-4">
+    <h2 class="h5">Depends on</h2>
+    <ul class="list-group mb-2 depends-on-list">
+        @foreach (var other in DependsOn)
+        {
+            <li class="list-group-item d-flex align-items-center gap-2 depends-on-item">
+                <a class="flex-grow-1" href="@AppRoutes.Details(other.Id)">@other.Title</a>
+                <span class="small text-muted">@EnumDisplay.Text(other.Status)</span>
+                <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Remove dependency on @other.Title"
+                        @onclick="() => OnRemove.InvokeAsync(other)">Remove</button>
+            </li>
+        }
+    </ul>
+    <form class="d-flex gap-2" aria-label="Add dependency form" @onsubmit="AddAsync">
+        <select class="form-select" aria-label="Depends on" @bind="_choice">
+            <option value="@UiConstants.NoSelection">Choose a todo…</option>
+            @foreach (var candidate in Candidates)
+            {
+                <option value="@candidate.Id">@candidate.Title</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-outline-primary text-nowrap">Add dependency</button>
+    </form>
+</section>
+
+@code {
+    private int _choice = UiConstants.NoSelection;
+    private IReadOnlyList<TodoItem>? _knownCandidates;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TodoItem> DependsOn { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TodoItem> Candidates { get; set; } = [];
+
+    [Parameter]
+    public Func<int, Task>? OnAdd { get; set; }
+
+    [Parameter]
+    public EventCallback<TodoItem> OnRemove { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_knownCandidates, Candidates))
+        {
+            _knownCandidates = Candidates;
+            _choice = UiConstants.NoSelection;
+        }
+    }
+
+    private Task AddAsync()
+    {
+        return OnAdd is null || _choice == UiConstants.NoSelection
+            ? Task.CompletedTask
+            : OnAdd(_choice);
+    }
+}
