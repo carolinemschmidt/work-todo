@@ -1,0 +1,274 @@
+@page "/todos/{Id:int}"
+@inherits ScopedPageBase
+@inject NavigationManager Navigation
+
+<PageTitle>@(_item?.Title ?? "Todo")</PageTitle>
+
+@if (ErrorMessage is not null)
+{
+    <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+}
+
+@if (_item is not null)
+{
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h1 class="h3">@_item.Title</h1>
+            <PriorityBadge Priority="_item.Priority" />
+            @if (_item.DueDate is { } dueDate)
+            {
+                <span class="text-muted">Due @dueDate.ToString(UiConstants.DateFormat)</span>
+            }
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="@AppRoutes.Edit(_item.Id)">Edit</a>
+            @if (_confirmingDelete)
+            {
+                <button type="button" class="btn btn-danger" aria-label="Confirm delete" @onclick="DeleteAsync">Confirm delete</button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="() => _confirmingDelete = false">Cancel</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline-danger" aria-label="Delete todo" @onclick="() => _confirmingDelete = true">Delete</button>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_item.Description))
+    {
+        <p class="text-break" style="white-space: pre-wrap">@_item.Description</p>
+    }
+
+    <div class="mb-4" style="max-width: 16rem">
+        <label class="form-label">Status</label>
+        <EnumSelect TEnum="TodoStatus" Label="Status" Value="_item.Status" ValueChanged="ChangeStatusAsync" />
+    </div>
+
+    <section class="mb-4">
+        <h2 class="h5">Tags</h2>
+        <div class="tag-list mb-2">
+            @foreach (var tag in _item.Tags)
+            {
+                <TagBadge Name="@tag.Name" OnRemove="() => RemoveTagAsync(tag)" />
+            }
+        </div>
+        <form class="d-flex gap-2" aria-label="Add tag form" @onsubmit="AddTagAsync">
+            <input class="form-control" aria-label="New tag" placeholder="Add a tag"
+                   @bind="_newTag" @bind:event="oninput" />
+            <button type="submit" class="btn btn-outline-primary">Add tag</button>
+        </form>
+    </section>
+
+    <section class="mb-4">
+        <h2 class="h5">Tickets</h2>
+        <ul class="list-group mb-2">
+            @foreach (var link in _item.TicketLinks)
+            {
+                <li class="list-group-item d-flex align-items-center gap-2">
+                    <a class="ticket-link flex-grow-1" href="@link.Url" target="_blank" rel="noopener noreferrer">@(link.Label ?? link.Url)</a>
+                    <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Remove link @(link.Label ?? link.Url)"
+                            @onclick="() => RemoveLinkAsync(link)">Remove</button>
+                </li>
+            }
+        </ul>
+        <form class="row g-2" aria-label="Add ticket link form" @onsubmit="AddLinkAsync">
+            <div class="col-sm-6">
+                <input class="form-control" aria-label="Ticket URL" placeholder="https://…"
+                       @bind="_linkUrl" @bind:event="oninput" />
+            </div>
+            <div class="col-sm-4">
+                <input class="form-control" aria-label="Ticket label" placeholder="Label (optional)"
+                       @bind="_linkLabel" @bind:event="oninput" />
+            </div>
+            <div class="col-sm-2">
+                <button type="submit" class="btn btn-outline-primary w-100">Add link</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="mb-4">
+        <h2 class="h5">Depends on</h2>
+        <ul class="list-group mb-2 depends-on-list">
+            @foreach (var other in _dependsOn)
+            {
+                <li class="list-group-item d-flex align-items-center gap-2 depends-on-item">
+                    <a class="flex-grow-1" href="@AppRoutes.Details(other.Id)">@other.Title</a>
+                    <span class="small text-muted">@EnumDisplay.Text(other.Status)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Remove dependency on @other.Title"
+                            @onclick="() => RemoveDependencyAsync(other)">Remove</button>
+                </li>
+            }
+        </ul>
+        <form class="d-flex gap-2" aria-label="Add dependency form" @onsubmit="AddDependencyAsync">
+            <select class="form-select" aria-label="Depends on" @bind="_dependencyChoice">
+                <option value="0">Choose a todo…</option>
+                @foreach (var candidate in _candidates)
+                {
+                    <option value="@candidate.Id">@candidate.Title</option>
+                }
+            </select>
+            <button type="submit" class="btn btn-outline-primary">Add dependency</button>
+        </form>
+    </section>
+
+    <section class="mb-4">
+        <h2 class="h5">Waiting on this</h2>
+        <ul class="list-group dependents-list">
+            @foreach (var dependent in _dependents)
+            {
+                <li class="list-group-item">
+                    <a href="@AppRoutes.Details(dependent.Id)">@dependent.Title</a>
+                </li>
+            }
+        </ul>
+    </section>
+
+    <section class="mb-4">
+        <h2 class="h5">Other things this is waiting for</h2>
+        <FreeTextDependencyList Dependencies="_item.FreeTextDependencies"
+                                OnAdd="AddFreeTextAsync" OnToggle="ToggleFreeTextAsync" OnRemove="RemoveFreeTextAsync" />
+    </section>
+}
+
+@code {
+    private TodoItem? _item;
+    private IReadOnlyList<TodoItem> _dependsOn = [];
+    private IReadOnlyList<TodoItem> _dependents = [];
+    private IReadOnlyList<TodoItem> _candidates = [];
+    private string _newTag = string.Empty;
+    private string _linkUrl = string.Empty;
+    private string _linkLabel = string.Empty;
+    private int _dependencyChoice;
+    private bool _confirmingDelete;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override Task OnParametersSetAsync() => RunAsync(ReloadAsync);
+
+    private async Task ReloadAsync()
+    {
+        _item = await TodoService.GetAsync(Id);
+        _dependsOn = await DependencyService.GetDependsOnAsync(Id);
+        _dependents = await DependencyService.GetDependentsAsync(Id);
+
+        var alreadyDependsOn = _dependsOn.Select(item => item.Id).ToHashSet();
+        var all = await TodoService.GetAllAsync();
+        _candidates = all.Where(item => item.Id != Id && !alreadyDependsOn.Contains(item.Id)).ToList();
+        _dependencyChoice = 0;
+    }
+
+    private Task ChangeStatusAsync(TodoStatus? status)
+    {
+        return status is { } value
+            ? RunAsync(async () =>
+            {
+                await TodoService.ChangeStatusAsync(Id, value);
+                await ReloadAsync();
+            })
+            : Task.CompletedTask;
+    }
+
+    private Task AddTagAsync()
+    {
+        return RunAsync(async () =>
+        {
+            await TodoService.AddTagAsync(Id, _newTag);
+            _newTag = string.Empty;
+            await ReloadAsync();
+        });
+    }
+
+    private Task RemoveTagAsync(Tag tag)
+    {
+        return RunAsync(async () =>
+        {
+            await TodoService.RemoveTagAsync(Id, tag.Id);
+            await ReloadAsync();
+        });
+    }
+
+    private Task AddLinkAsync()
+    {
+        return RunAsync(async () =>
+        {
+            await TodoService.AddTicketLinkAsync(Id, _linkUrl, _linkLabel);
+            _linkUrl = string.Empty;
+            _linkLabel = string.Empty;
+            await ReloadAsync();
+        });
+    }
+
+    private Task RemoveLinkAsync(TicketLink link)
+    {
+        return RunAsync(async () =>
+        {
+            await TodoService.RemoveTicketLinkAsync(Id, link.Id);
+            await ReloadAsync();
+        });
+    }
+
+    private Task AddDependencyAsync()
+    {
+        return _dependencyChoice == 0
+            ? Task.CompletedTask
+            : RunAsync(async () =>
+            {
+                await DependencyService.AddDependencyAsync(Id, _dependencyChoice);
+                await ReloadAsync();
+            });
+    }
+
+    private Task RemoveDependencyAsync(TodoItem other)
+    {
+        return RunAsync(async () =>
+        {
+            await DependencyService.RemoveDependencyAsync(Id, other.Id);
+            await ReloadAsync();
+        });
+    }
+
+    private Task AddFreeTextAsync(string text)
+    {
+        return RunAsync(async () =>
+        {
+            await DependencyService.AddFreeTextDependencyAsync(Id, text);
+            await ReloadAsync();
+        });
+    }
+
+    private Task ToggleFreeTextAsync(FreeTextDependency dependency)
+    {
+        return RunAsync(async () =>
+        {
+            if (dependency.IsResolved)
+            {
+                await DependencyService.ReopenFreeTextDependencyAsync(Id, dependency.Id);
+            }
+            else
+            {
+                await DependencyService.ResolveFreeTextDependencyAsync(Id, dependency.Id);
+            }
+
+            await ReloadAsync();
+        });
+    }
+
+    private Task RemoveFreeTextAsync(FreeTextDependency dependency)
+    {
+        return RunAsync(async () =>
+        {
+            await DependencyService.RemoveFreeTextDependencyAsync(Id, dependency.Id);
+            await ReloadAsync();
+        });
+    }
+
+    private Task DeleteAsync()
+    {
+        return RunAsync(async () =>
+        {
+            await TodoService.DeleteAsync(Id);
+            Navigation.NavigateTo(AppRoutes.Home);
+        });
+    }
+}

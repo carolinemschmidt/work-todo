@@ -1,0 +1,52 @@
+@page "/next"
+@inherits ScopedPageBase
+
+<PageTitle>Next up</PageTitle>
+
+<h1 class="h3 mb-3">Next up</h1>
+<p class="text-muted">Open todos that are not waiting on anything, most urgent first.</p>
+
+@if (ErrorMessage is not null)
+{
+    <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+}
+
+@if (!_loaded)
+{
+    <p class="text-muted">Loading…</p>
+}
+else if (_items.Count == 0)
+{
+    <p class="text-muted">Nothing is ready to work on.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var item in _items)
+        {
+            <TodoListItem Item="item" OnMarkDone="() => MarkDoneAsync(item)" />
+        }
+    </ul>
+}
+
+@code {
+    private IReadOnlyList<TodoItem> _items = [];
+    private bool _loaded;
+
+    protected override Task OnInitializedAsync() => RunAsync(ReloadAsync);
+
+    private async Task ReloadAsync()
+    {
+        _items = await NextUpService.GetNextUpAsync();
+        _loaded = true;
+    }
+
+    private Task MarkDoneAsync(TodoItem item)
+    {
+        return RunAsync(async () =>
+        {
+            await TodoService.ChangeStatusAsync(item.Id, TodoStatus.Done);
+            await ReloadAsync();
+        });
+    }
+}

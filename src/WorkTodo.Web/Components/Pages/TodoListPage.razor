@@ -1,0 +1,98 @@
+@page "/"
+@using WorkTodo.Services.Models
+@inherits ScopedPageBase
+
+<PageTitle>Todos</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Todos</h1>
+    <a class="btn btn-primary" href="@AppRoutes.NewTodo">New todo</a>
+</div>
+
+@if (ErrorMessage is not null)
+{
+    <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+}
+
+<div class="row g-2 mb-3">
+    <div class="col-sm-4">
+        <select class="form-select" aria-label="Filter by tag" @onchange="OnTagChanged">
+            <option value="" selected="@(_tagId is null)">All tags</option>
+            @foreach (var tag in _tags)
+            {
+                <option value="@tag.Id" selected="@(_tagId == tag.Id)">@tag.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-sm-4">
+        <EnumSelect TEnum="Priority" Label="Filter by priority" AnyText="All priorities"
+                    Value="_priority" ValueChanged="OnPriorityChanged" />
+    </div>
+    <div class="col-sm-4">
+        <EnumSelect TEnum="TodoStatus" Label="Filter by status" AnyText="All statuses"
+                    Value="_status" ValueChanged="OnStatusChanged" />
+    </div>
+</div>
+
+@if (!_loaded)
+{
+    <p class="text-muted">Loading…</p>
+}
+else if (_items.Count == 0)
+{
+    <p class="text-muted">No todos found.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var item in _items)
+        {
+            <TodoListItem Item="item" OnMarkDone="() => MarkDoneAsync(item)" />
+        }
+    </ul>
+}
+
+@code {
+    private IReadOnlyList<Tag> _tags = [];
+    private IReadOnlyList<TodoItem> _items = [];
+    private int? _tagId;
+    private Priority? _priority;
+    private TodoStatus? _status;
+    private bool _loaded;
+
+    protected override Task OnInitializedAsync() => RunAsync(ReloadAsync);
+
+    private async Task ReloadAsync()
+    {
+        _tags = await TagService.GetAllAsync();
+        _items = await TodoService.GetAllAsync(new TodoFilter(_tagId, _priority, _status));
+        _loaded = true;
+    }
+
+    private Task OnTagChanged(ChangeEventArgs args)
+    {
+        _tagId = int.TryParse(args.Value?.ToString(), out var id) ? id : null;
+        return RunAsync(ReloadAsync);
+    }
+
+    private Task OnPriorityChanged(Priority? priority)
+    {
+        _priority = priority;
+        return RunAsync(ReloadAsync);
+    }
+
+    private Task OnStatusChanged(TodoStatus? status)
+    {
+        _status = status;
+        return RunAsync(ReloadAsync);
+    }
+
+    private Task MarkDoneAsync(TodoItem item)
+    {
+        return RunAsync(async () =>
+        {
+            await TodoService.ChangeStatusAsync(item.Id, TodoStatus.Done);
+            await ReloadAsync();
+        });
+    }
+}

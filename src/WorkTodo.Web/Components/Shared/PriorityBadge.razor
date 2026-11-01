@@ -1,0 +1,15 @@
+<span class="badge @CssClass me-1">@EnumDisplay.Text(Priority)</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public Priority Priority { get; set; }
+
+    private string CssClass => Priority switch
+    {
+        Priority.Low => "bg-light text-dark border",
+        Priority.Medium => "bg-primary",
+        Priority.High => "bg-warning text-dark",
+        Priority.Critical => "bg-danger",
+        _ => "bg-secondary",
+    };
+}

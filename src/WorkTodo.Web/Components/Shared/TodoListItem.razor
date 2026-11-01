@@ -1,0 +1,31 @@
+<li class="list-group-item d-flex align-items-center gap-3 todo-item">
+    <div class="flex-grow-1">
+        <a class="todo-title @(Item.Status == TodoStatus.Done ? "text-decoration-line-through text-muted" : null)"
+           href="@AppRoutes.Details(Item.Id)">@Item.Title</a>
+        <div class="small text-muted">
+            <PriorityBadge Priority="Item.Priority" />
+            <span class="me-2">@EnumDisplay.Text(Item.Status)</span>
+            @if (Item.DueDate is { } dueDate)
+            {
+                <span class="me-2">Due @dueDate.ToString(UiConstants.DateFormat)</span>
+            }
+            @foreach (var tag in Item.Tags)
+            {
+                <TagBadge Name="@tag.Name" />
+            }
+        </div>
+    </div>
+    @if (Item.Status != TodoStatus.Done)
+    {
+        <button type="button" class="btn btn-sm btn-outline-success" aria-label="Mark done: @Item.Title"
+                @onclick="OnMarkDone">Mark done</button>
+    }
+</li>
+
+@code {
+    [Parameter, EditorRequired]
+    public TodoItem Item { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnMarkDone { get; set; }
+}

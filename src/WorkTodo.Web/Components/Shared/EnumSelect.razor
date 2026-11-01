@@ -1,0 +1,38 @@
+@typeparam TEnum where TEnum : struct, Enum
+
+<select class="form-select" aria-label="@Label" @onchange="HandleChange">
+    @if (AnyText is not null)
+    {
+        <option value="" selected="@(Value is null)">@AnyText</option>
+    }
+    @foreach (var option in Enum.GetValues<TEnum>())
+    {
+        <option value="@option" selected="@IsSelected(option)">@EnumDisplay.Text(option)</option>
+    }
+</select>
+
+@code {
+    [Parameter]
+    public TEnum? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<TEnum?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? AnyText { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    private bool IsSelected(TEnum option)
+    {
+        return Value is { } current && EqualityComparer<TEnum>.Default.Equals(current, option);
+    }
+
+    private Task HandleChange(ChangeEventArgs args)
+    {
+        var text = args.Value?.ToString();
+        TEnum? value = string.IsNullOrEmpty(text) ? null : Enum.Parse<TEnum>(text);
+        return ValueChanged.InvokeAsync(value);
+    }
+}

@@ -8,7 +8,14 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddDataLayer(this IServiceCollection services, string connectionString)
     {
-        services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+        return services.AddDataLayer(options => options.UseSqlServer(connectionString));
+    }
+
+    public static IServiceCollection AddDataLayer(
+        this IServiceCollection services,
+        Action<DbContextOptionsBuilder> configureDatabase)
+    {
+        services.AddDbContext<AppDbContext>(configureDatabase);
         services.AddScoped<ITodoRepository, TodoRepository>();
         services.AddScoped<ITodoDependencyRepository, TodoDependencyRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
