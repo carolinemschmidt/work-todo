@@ -30,7 +30,7 @@ public class TodoListPageTests : WebTestBase
         var cut = Render<TodoListPage>();
 
         cut.WaitForAssertion(() => Assert.Contains("No todos yet", cut.Markup));
-        Assert.Equal("/todos/new", cut.Find("p a").GetAttribute("href"));
+        Assert.Equal("todos/new", cut.Find("p a").GetAttribute("href"));
     }
 
     [Fact]
