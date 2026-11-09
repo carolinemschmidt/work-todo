@@ -4,10 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 using WorkTodo.Core.Entities;
 using WorkTodo.Data.Exceptions;
 using WorkTodo.Services;
-using WorkTodo.Web.Components.Pages;
-using WorkTodo.Web.Constants;
+using WorkTodo.UI.Components.Pages;
+using WorkTodo.UI.Constants;
 
-namespace WorkTodo.Web.Tests.Pages;
+namespace WorkTodo.UI.Tests.Pages;
 
 public class DatabaseFailureTests : WebTestBase
 {

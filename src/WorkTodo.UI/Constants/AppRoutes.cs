@@ -1,4 +1,4 @@
-namespace WorkTodo.Web.Constants;
+namespace WorkTodo.UI.Constants;
 
 public static class AppRoutes
 {

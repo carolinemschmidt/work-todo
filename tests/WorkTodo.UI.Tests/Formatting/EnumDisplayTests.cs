@@ -1,7 +1,7 @@
 using WorkTodo.Core.Enums;
-using WorkTodo.Web.Formatting;
+using WorkTodo.UI.Formatting;
 
-namespace WorkTodo.Web.Tests.Formatting;
+namespace WorkTodo.UI.Tests.Formatting;
 
 public class EnumDisplayTests
 {

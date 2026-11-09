@@ -6,9 +6,9 @@ using WorkTodo.Core.Exceptions;
 using WorkTodo.Data.Exceptions;
 using WorkTodo.Services;
 using WorkTodo.Services.Exceptions;
-using WorkTodo.Web.Constants;
+using WorkTodo.UI.Constants;
 
-namespace WorkTodo.Web.Components;
+namespace WorkTodo.UI.Components;
 
 public abstract class ScopedPageBase : OwningComponentBase
 {

@@ -7,7 +7,7 @@ using WorkTodo.Core.Enums;
 using WorkTodo.Data;
 using WorkTodo.Services;
 
-namespace WorkTodo.Web.Tests;
+namespace WorkTodo.UI.Tests;
 
 public abstract class WebTestBase : BunitContext
 {

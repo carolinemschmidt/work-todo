@@ -1,6 +1,7 @@
 using WorkTodo.Data;
 using WorkTodo.Data.Constants;
 using WorkTodo.Services;
+using WorkTodo.UI.Components.Layout;
 using WorkTodo.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +33,7 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .AddAdditionalAssemblies(typeof(MainLayout).Assembly);
 
 app.Run();

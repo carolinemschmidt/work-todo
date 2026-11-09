@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using WorkTodo.Core.Constants;
 using WorkTodo.Core.Enums;
 
-namespace WorkTodo.Web.Models;
+namespace WorkTodo.UI.Models;
 
 public class TodoFormModel
 {

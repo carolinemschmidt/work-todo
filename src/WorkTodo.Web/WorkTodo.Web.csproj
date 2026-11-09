@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <ProjectReference Include="..\WorkTodo.UI\WorkTodo.UI.csproj" />
     <ProjectReference Include="..\WorkTodo.Services\WorkTodo.Services.csproj" />
     <ProjectReference Include="..\WorkTodo.Data\WorkTodo.Data.csproj" />
   </ItemGroup>

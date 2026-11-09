@@ -1,9 +1,9 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
-using WorkTodo.Web.Components.Shared;
+using WorkTodo.UI.Components.Shared;
 
-namespace WorkTodo.Web.Tests.Components;
+namespace WorkTodo.UI.Tests.Components;
 
 public class AppErrorBoundaryTests : BunitContext
 {
