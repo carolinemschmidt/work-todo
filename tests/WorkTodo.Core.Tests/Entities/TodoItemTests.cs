@@ -83,6 +83,21 @@ public class TodoItemTests
     }
 
     [Fact]
+    public void Failed_update_leaves_every_field_unchanged()
+    {
+        var dueDate = new DateOnly(2026, 12, 24);
+        var item = new TodoItem("Write report", Priority.Low, "Quarterly numbers", dueDate);
+        var tooLong = new string('a', ValidationConstants.DescriptionMaxLength + 1);
+
+        Assert.Throws<ArgumentException>(() => item.Update("Write summary", Priority.Critical, tooLong, null));
+
+        Assert.Equal("Write report", item.Title);
+        Assert.Equal(Priority.Low, item.Priority);
+        Assert.Equal("Quarterly numbers", item.Description);
+        Assert.Equal(dueDate, item.DueDate);
+    }
+
+    [Fact]
     public void Status_can_be_changed()
     {
         var item = new TodoItem("Write report", Priority.Low);
