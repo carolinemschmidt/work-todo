@@ -10,12 +10,33 @@ using WorkTodo.UI.Constants;
 
 namespace WorkTodo.UI.Components;
 
-public abstract class ScopedPageBase : OwningComponentBase
+public abstract class ScopedPageBase : ComponentBase, IDisposable
 {
+    private IServiceScope? _scope;
+    private bool _isDisposed;
+
     protected string? ErrorMessage { get; private set; }
 
     [Inject]
-    private ILogger<ScopedPageBase> Logger { get; set; } = default!;
+    protected IServiceScopeFactory ScopeFactory { get; set; } = default!;
+
+    [Inject]
+    protected ILogger<ScopedPageBase> Logger { get; set; } = default!;
+
+    protected IServiceProvider ScopedServices
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_isDisposed, this);
+            return (_scope ??= ScopeFactory.CreateScope()).ServiceProvider;
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        _isDisposed = true;
+        _scope?.Dispose();
+    }
 
     protected ITodoService TodoService => ScopedServices.GetRequiredService<ITodoService>();
 
