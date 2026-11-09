@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\WorkTodo.Data\WorkTodo.Data.csproj" />
+    <ProjectReference Include="..\..\src\WorkTodo.Data.InMemory\WorkTodo.Data.InMemory.csproj" />
     <ProjectReference Include="..\..\src\WorkTodo.Core\WorkTodo.Core.csproj" />
   </ItemGroup>
 

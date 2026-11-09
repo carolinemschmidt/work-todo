@@ -43,9 +43,13 @@ public class TodoItem
 
     public void Update(string title, Priority priority, string? description, DateOnly? dueDate)
     {
-        Title = Guard.RequiredText(title, ValidationConstants.TitleMaxLength, FieldLabels.Title);
-        Priority = Guard.DefinedEnum(priority, FieldLabels.Priority);
-        Description = Guard.OptionalText(description, ValidationConstants.DescriptionMaxLength, FieldLabels.Description);
+        var validTitle = Guard.RequiredText(title, ValidationConstants.TitleMaxLength, FieldLabels.Title);
+        var validPriority = Guard.DefinedEnum(priority, FieldLabels.Priority);
+        var validDescription = Guard.OptionalText(description, ValidationConstants.DescriptionMaxLength, FieldLabels.Description);
+
+        Title = validTitle;
+        Priority = validPriority;
+        Description = validDescription;
         DueDate = dueDate;
     }
 

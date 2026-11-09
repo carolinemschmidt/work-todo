@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/WorkTodo.Core/WorkTodo.Core.csproj" />
     <Project Path="src/WorkTodo.Data/WorkTodo.Data.csproj" />
+    <Project Path="src/WorkTodo.Data.InMemory/WorkTodo.Data.InMemory.csproj" />
     <Project Path="src/WorkTodo.Services/WorkTodo.Services.csproj" />
     <Project Path="src/WorkTodo.UI/WorkTodo.UI.csproj" />
     <Project Path="src/WorkTodo.Web/WorkTodo.Web.csproj" />
