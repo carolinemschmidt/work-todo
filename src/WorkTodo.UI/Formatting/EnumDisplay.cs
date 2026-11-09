@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace WorkTodo.Web.Formatting;
+namespace WorkTodo.UI.Formatting;
 
 public static partial class EnumDisplay
 {

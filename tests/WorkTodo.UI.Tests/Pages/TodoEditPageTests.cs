@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using WorkTodo.Core.Enums;
 using WorkTodo.Services;
-using WorkTodo.Web.Components.Pages;
+using WorkTodo.UI.Components.Pages;
 
-namespace WorkTodo.Web.Tests.Pages;
+namespace WorkTodo.UI.Tests.Pages;
 
 public class TodoEditPageTests : WebTestBase
 {
