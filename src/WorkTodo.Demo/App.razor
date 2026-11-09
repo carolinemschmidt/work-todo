@@ -1,0 +1,9 @@
+<DemoBanner />
+<Router AppAssembly="typeof(App).Assembly"
+        AdditionalAssemblies="new[] { typeof(WorkTodo.UI.Components.Layout.MainLayout).Assembly }"
+        NotFoundPage="typeof(WorkTodo.UI.Components.Pages.NotFound)">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(WorkTodo.UI.Components.Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

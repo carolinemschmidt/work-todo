@@ -3,6 +3,7 @@
     <Project Path="src/WorkTodo.Core/WorkTodo.Core.csproj" />
     <Project Path="src/WorkTodo.Data/WorkTodo.Data.csproj" />
     <Project Path="src/WorkTodo.Data.InMemory/WorkTodo.Data.InMemory.csproj" />
+    <Project Path="src/WorkTodo.Demo/WorkTodo.Demo.csproj" />
     <Project Path="src/WorkTodo.Services/WorkTodo.Services.csproj" />
     <Project Path="src/WorkTodo.UI/WorkTodo.UI.csproj" />
     <Project Path="src/WorkTodo.Web/WorkTodo.Web.csproj" />
@@ -10,6 +11,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/WorkTodo.Core.Tests/WorkTodo.Core.Tests.csproj" />
     <Project Path="tests/WorkTodo.Data.Tests/WorkTodo.Data.Tests.csproj" />
+    <Project Path="tests/WorkTodo.Demo.Tests/WorkTodo.Demo.Tests.csproj" />
     <Project Path="tests/WorkTodo.Services.Tests/WorkTodo.Services.Tests.csproj" />
     <Project Path="tests/WorkTodo.UI.Tests/WorkTodo.UI.Tests.csproj" />
   </Folder>
