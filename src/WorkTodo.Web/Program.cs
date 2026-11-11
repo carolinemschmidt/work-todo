@@ -1,5 +1,6 @@
 using WorkTodo.Data;
 using WorkTodo.Data.Constants;
+using WorkTodo.Data.Exceptions;
 using WorkTodo.Services;
 using WorkTodo.UI.Components.Layout;
 using WorkTodo.Web.Components;
@@ -19,6 +20,19 @@ builder.Services.AddRazorComponents()
 
 var app = builder.Build();
 
+if (app.Configuration.GetValue<bool>(DatabaseConstants.ApplyMigrationsSettingName))
+{
+    try
+    {
+        await app.Services.ApplyMigrationsAsync();
+    }
+    catch (DataAccessException exception)
+    {
+        app.Logger.LogCritical("{Message} Reason: {Reason}", exception.Message, exception.InnerException?.Message);
+        return 1;
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -37,3 +51,4 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(MainLayout).Assembly);
 
 app.Run();
+return 0;
