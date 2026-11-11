@@ -33,7 +33,7 @@ To change anything, set an environment variable before starting the app. The set
 
 | Environment variable | Default | What it does |
 | --- | --- | --- |
-| `ConnectionStrings__WorkTodo` | `Server=.\SQLEXPRESS;Database=WorkTodo;Trusted_Connection=True;TrustServerCertificate=True` (Development) | Which SQL Server and database to use. Required when running a published build. |
+| `ConnectionStrings__WorkTodo` | `Server=.\SQLEXPRESS;Database=WorkTodo;Trusted_Connection=True;TrustServerCertificate=True` (Development) | Which SQL Server and database to use. Required when running a published build. If it is missing or blank, the app prints a message and exits. |
 | `Database__ApplyMigrationsOnStartup` | `true` in Development, otherwise `false` | Creates the database and applies migrations when the app starts. |
 | `ASPNETCORE_URLS` | `http://localhost:5157` when started with `dotnet run` | The address the app listens on. |
 
@@ -42,6 +42,8 @@ For example, in PowerShell:
 ```powershell
 $env:ConnectionStrings__WorkTodo = "Server=.\MYINSTANCE;Database=MyTodos;Trusted_Connection=True;TrustServerCertificate=True"
 ```
+
+The examples keep `TrustServerCertificate=True`, which makes the app accept the server's certificate without checking it. That is fine for SQL Server Express on your own machine. If you point the app at a remote server, remove it and use a certificate the machine trusts. Keep passwords out of files in the repository; set them through the environment variable instead.
 
 ### Run the project
 

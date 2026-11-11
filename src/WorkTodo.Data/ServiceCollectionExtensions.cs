@@ -1,13 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using WorkTodo.Data.Exceptions;
 using WorkTodo.Data.Repositories;
 
 namespace WorkTodo.Data;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddDataLayer(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddDataLayer(this IServiceCollection services, string? connectionString)
     {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new MissingConnectionStringException();
+        }
+
         return services.AddDataLayer(options => options.UseSqlServer(connectionString));
     }
 
