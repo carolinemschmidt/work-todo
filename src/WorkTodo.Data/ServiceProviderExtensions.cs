@@ -1,4 +1,3 @@
-using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using WorkTodo.Data.Constants;
@@ -19,7 +18,7 @@ public static class ServiceProviderExtensions
         {
             await context.Database.MigrateAsync(cancellationToken);
         }
-        catch (DbException exception)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
             throw new DataAccessException(DatabaseConstants.MigrationFailedMessage, exception);
         }

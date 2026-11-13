@@ -8,6 +8,15 @@ namespace WorkTodo.Data.Tests.Repositories;
 public class InMemoryTagRepositoryTests() : TagRepositoryContractTests(new InMemoryRepositoryStore())
 {
     [Fact]
+    public async Task Adding_a_duplicate_name_throws_a_duplicate_entry_exception()
+    {
+        await Store.NewScope().Tags.AddAsync(new Tag("work"));
+
+        await Assert.ThrowsAsync<DuplicateEntryException>(
+            () => Store.NewScope().Tags.AddAsync(new Tag("work")));
+    }
+
+    [Fact]
     public async Task Tag_names_are_matched_without_regard_to_case_like_the_sql_server_default()
     {
         await Store.NewScope().Tags.AddAsync(new Tag("work"));
@@ -22,7 +31,7 @@ public class InMemoryTagRepositoryTests() : TagRepositoryContractTests(new InMem
     {
         await Store.NewScope().Tags.AddAsync(new Tag("work"));
 
-        await Assert.ThrowsAsync<DataAccessException>(
+        await Assert.ThrowsAnyAsync<DataAccessException>(
             () => Store.NewScope().Tags.AddAsync(new Tag("Work")));
     }
 

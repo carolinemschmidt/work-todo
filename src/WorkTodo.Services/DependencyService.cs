@@ -1,6 +1,7 @@
 using WorkTodo.Core.Entities;
 using WorkTodo.Core.Rules;
 using WorkTodo.Data.Repositories;
+using WorkTodo.Services.Constants;
 using WorkTodo.Services.Exceptions;
 using WorkTodo.Services.Extensions;
 using WorkTodo.Services.Queries;
@@ -114,6 +115,6 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
     private static FreeTextDependency FindFreeTextDependency(TodoItem item, int dependencyId)
     {
         return item.FreeTextDependencies.FirstOrDefault(dependency => dependency.Id == dependencyId)
-            ?? throw new NotFoundException(nameof(FreeTextDependency), dependencyId);
+            ?? throw new NotFoundException(EntityNames.FreeTextDependency, dependencyId);
     }
 }

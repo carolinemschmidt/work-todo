@@ -65,7 +65,7 @@ public abstract class TagRepositoryContractTests(RepositoryStore store) : IDispo
     {
         await Store.NewScope().Tags.AddAsync(new Tag("work"));
 
-        await Assert.ThrowsAsync<DataAccessException>(
+        await Assert.ThrowsAnyAsync<DataAccessException>(
             () => Store.NewScope().Tags.AddAsync(new Tag("work")));
     }
 
@@ -74,7 +74,7 @@ public abstract class TagRepositoryContractTests(RepositoryStore store) : IDispo
     {
         var repository = Store.NewScope().Tags;
         await repository.AddAsync(new Tag("work"));
-        await Assert.ThrowsAsync<DataAccessException>(() => repository.AddAsync(new Tag("work")));
+        await Assert.ThrowsAnyAsync<DataAccessException>(() => repository.AddAsync(new Tag("work")));
 
         await repository.AddAsync(new Tag("home"));
 

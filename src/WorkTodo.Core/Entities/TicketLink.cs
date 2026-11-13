@@ -28,6 +28,11 @@ public class TicketLink
             throw new ArgumentException($"{FieldLabels.TicketUrl} must be an absolute http or https URL.");
         }
 
+        if (uri.UserInfo.Length > 0)
+        {
+            throw new ArgumentException($"{FieldLabels.TicketUrl} must not contain a user name or password.");
+        }
+
         return trimmed;
     }
 }

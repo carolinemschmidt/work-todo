@@ -59,6 +59,11 @@ public abstract class ScopedPageBase : ComponentBase, IDisposable
             ErrorMessage = exception.Message;
             return false;
         }
+        catch (DuplicateEntryException exception)
+        {
+            ErrorMessage = exception.Message;
+            return false;
+        }
         catch (Exception exception) when (IsDatabaseFailure(exception))
         {
             Logger.LogError(exception, "Database operation failed");

@@ -10,7 +10,10 @@ public static class DatabaseConstants
     public const string MissingConnectionStringMessage =
         $"Connection string '{ConnectionStringName}' is missing or empty. Set it in the app settings "
         + $"or with the environment variable ConnectionStrings__{ConnectionStringName}.";
+    public const string DuplicateEntryMessage = "That already exists.";
+    public const int SqlServerDuplicateIndexError = 2601;
+    public const int SqlServerDuplicateKeyError = 2627;
     public const string MigrationFailedMessage =
         "The database could not be created or updated. Check that SQL Server is running "
-        + "and that the 'WorkTodo' connection string is correct.";
+        + $"and that the '{ConnectionStringName}' connection string is correct.";
 }

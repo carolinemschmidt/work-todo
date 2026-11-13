@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using WorkTodo.Data.Constants;
 using WorkTodo.Data.Exceptions;
@@ -15,7 +16,15 @@ internal static class DbContextExtensions
         catch (DbUpdateException exception)
         {
             context.ChangeTracker.Clear();
-            throw new DataAccessException(DatabaseConstants.SaveFailedMessage, exception);
+            throw IsDuplicateKey(exception)
+                ? new DuplicateEntryException(exception)
+                : new DataAccessException(DatabaseConstants.SaveFailedMessage, exception);
         }
+    }
+
+    private static bool IsDuplicateKey(DbUpdateException exception)
+    {
+        return exception.InnerException is SqlException sqlException
+            && SqlServerErrors.IsDuplicateKey(sqlException.Number);
     }
 }

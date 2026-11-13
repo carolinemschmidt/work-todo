@@ -57,7 +57,7 @@ public class InMemoryTodoRepositoryTests() : TodoRepositoryContractTests(new InM
         var item = new TodoItem("Write report", Priority.Low);
         item.AddTag(new Tag("Work"));
 
-        await Assert.ThrowsAsync<DataAccessException>(() => Store.NewScope().Todos.AddAsync(item));
+        await Assert.ThrowsAnyAsync<DataAccessException>(() => Store.NewScope().Todos.AddAsync(item));
 
         Assert.Empty(await Store.NewScope().Todos.GetAllAsync());
         Assert.Single(await Store.NewScope().Tags.GetAllAsync());

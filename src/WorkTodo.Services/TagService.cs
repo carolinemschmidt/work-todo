@@ -1,6 +1,7 @@
 using WorkTodo.Core.Entities;
 using WorkTodo.Data.Exceptions;
 using WorkTodo.Data.Repositories;
+using WorkTodo.Services.Constants;
 using WorkTodo.Services.Exceptions;
 
 namespace WorkTodo.Services;
@@ -22,7 +23,7 @@ public class TagService(ITagRepository tags) : ITagService
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var tag = await tags.GetByIdAsync(id, cancellationToken)
-            ?? throw new NotFoundException(nameof(Tag), id);
+            ?? throw new NotFoundException(EntityNames.Tag, id);
 
         await tags.DeleteAsync(tag, cancellationToken);
     }
