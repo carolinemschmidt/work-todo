@@ -1,5 +1,4 @@
 using WorkTodo.Core.Entities;
-using WorkTodo.Data.Constants;
 using WorkTodo.Data.Exceptions;
 using WorkTodo.Data.InMemory.Constants;
 
@@ -75,7 +74,7 @@ public sealed class InMemoryDataStore
             && existing.DependsOnTodoItemId == dependency.DependsOnTodoItemId);
         if (exists)
         {
-            throw Failure(InMemoryConstants.DuplicateDependencyMessage);
+            throw new DuplicateEntryException(new InvalidOperationException(InMemoryConstants.DuplicateDependencyMessage));
         }
 
         Dependencies.Add(dependency);
@@ -91,17 +90,13 @@ public sealed class InMemoryDataStore
         return item.Tags.Where(tag => tag.Id == 0).ToList();
     }
 
-    private static DataAccessException Failure(string reason)
-    {
-        return new DataAccessException(DatabaseConstants.SaveFailedMessage, new InvalidOperationException(reason));
-    }
-
     private void EnsureNamesAreFree(IReadOnlyList<Tag> newTags)
     {
         var taken = newTags.FirstOrDefault(tag => FindTag(tag.Name) is not null);
         if (taken is not null)
         {
-            throw Failure(string.Format(InMemoryConstants.DuplicateTagMessage, taken.Name));
+            var reason = string.Format(InMemoryConstants.DuplicateTagMessage, taken.Name);
+            throw new DuplicateEntryException(new InvalidOperationException(reason));
         }
     }
 

@@ -1,6 +1,7 @@
 using WorkTodo.Core.Entities;
 using WorkTodo.Core.Enums;
 using WorkTodo.Data.Repositories;
+using WorkTodo.Services.Constants;
 using WorkTodo.Services.Exceptions;
 using WorkTodo.Services.Extensions;
 using WorkTodo.Services.Models;
@@ -74,7 +75,7 @@ public class TodoService(ITodoRepository todos, ITagService tags) : ITodoService
     {
         var item = await todos.GetRequiredAsync(id, cancellationToken);
         var tag = item.Tags.FirstOrDefault(existing => existing.Id == tagId)
-            ?? throw new NotFoundException(nameof(Tag), tagId);
+            ?? throw new NotFoundException(EntityNames.Tag, tagId);
 
         item.RemoveTag(tag);
         await todos.UpdateAsync(item, cancellationToken);
@@ -95,7 +96,7 @@ public class TodoService(ITodoRepository todos, ITagService tags) : ITodoService
     {
         var item = await todos.GetRequiredAsync(id, cancellationToken);
         var link = item.TicketLinks.FirstOrDefault(existing => existing.Id == linkId)
-            ?? throw new NotFoundException(nameof(TicketLink), linkId);
+            ?? throw new NotFoundException(EntityNames.TicketLink, linkId);
 
         item.RemoveTicketLink(link);
         await todos.UpdateAsync(item, cancellationToken);

@@ -35,6 +35,16 @@ public class TicketLinkTests
         Assert.ThrowsAny<ArgumentException>(() => new TicketLink(url!));
     }
 
+    [Theory]
+    [InlineData("https://user:secret@tickets.example.com/ABC-1")]
+    [InlineData("https://user@tickets.example.com/ABC-1")]
+    public void Url_with_a_user_name_or_password_is_rejected(string url)
+    {
+        var exception = Assert.Throws<ArgumentException>(() => new TicketLink(url));
+
+        Assert.Equal("Ticket URL must not contain a user name or password.", exception.Message);
+    }
+
     [Fact]
     public void Too_long_label_is_rejected()
     {

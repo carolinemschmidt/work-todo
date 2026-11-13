@@ -80,7 +80,7 @@ public abstract class TodoDependencyRepositoryContractTests(RepositoryStore stor
         var (first, second) = await AddTwoItems();
         await Store.NewScope().Dependencies.AddAsync(new TodoDependency(first, second));
 
-        await Assert.ThrowsAsync<DataAccessException>(
+        await Assert.ThrowsAnyAsync<DataAccessException>(
             () => Store.NewScope().Dependencies.AddAsync(new TodoDependency(first, second)));
     }
 

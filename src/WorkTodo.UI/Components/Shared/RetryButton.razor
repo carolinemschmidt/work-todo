@@ -1,0 +1,6 @@
+<button type="button" class="btn btn-outline-primary retry-button" @onclick="OnRetry">Try again</button>
+
+@code {
+    [Parameter, EditorRequired]
+    public EventCallback OnRetry { get; set; }
+}

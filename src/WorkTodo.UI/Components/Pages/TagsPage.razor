@@ -16,7 +16,11 @@
     <button type="submit" class="btn btn-primary">Add tag</button>
 </form>
 
-@if (!_loaded)
+@if (!_loaded && ErrorMessage is not null)
+{
+    <RetryButton OnRetry="RetryAsync" />
+}
+else if (!_loaded)
 {
     <LoadingIndicator />
 }
@@ -44,6 +48,8 @@ else
     private bool _loaded;
 
     protected override Task OnInitializedAsync() => RunAsync(ReloadAsync);
+
+    private Task RetryAsync() => RunAsync(ReloadAsync);
 
     private async Task ReloadAsync()
     {
