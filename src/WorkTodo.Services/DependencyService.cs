@@ -15,15 +15,15 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
         int dependsOnTodoItemId,
         CancellationToken cancellationToken = default)
     {
-        await todos.GetRequiredAsync(todoItemId, cancellationToken);
-        await todos.GetRequiredAsync(dependsOnTodoItemId, cancellationToken);
+        var item = await todos.GetRequiredAsync(todoItemId, cancellationToken);
+        var dependsOn = await todos.GetRequiredAsync(dependsOnTodoItemId, cancellationToken);
 
         if (await dependencies.GetAsync(todoItemId, dependsOnTodoItemId, cancellationToken) is not null)
         {
             return;
         }
 
-        await EnsureNoCycleAsync(todoItemId, dependsOnTodoItemId, cancellationToken);
+        await EnsureNoCycleAsync(item, dependsOn, cancellationToken);
         await dependencies.AddAsync(new TodoDependency(todoItemId, dependsOnTodoItemId), cancellationToken);
     }
 
@@ -53,6 +53,21 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
     {
         var ids = await dependencies.GetDependentIdsAsync(todoItemId, cancellationToken);
         return await GetOrderedItemsAsync(ids, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TodoItem>> GetAvailableDependenciesAsync(
+        int todoItemId,
+        CancellationToken cancellationToken = default)
+    {
+        await todos.GetRequiredAsync(todoItemId, cancellationToken);
+        var all = await dependencies.GetAllAsync(cancellationToken);
+        var excludedIds = DependencyRules.FindDependentIds(todoItemId, all)
+            .Concat(all.Where(d => d.TodoItemId == todoItemId).Select(d => d.DependsOnTodoItemId))
+            .Append(todoItemId)
+            .ToHashSet();
+
+        var candidates = (await todos.GetAllAsync(cancellationToken)).Where(item => !excludedIds.Contains(item.Id));
+        return TodoOrdering.ByUrgency(candidates).ToList();
     }
 
     public async Task AddFreeTextDependencyAsync(
@@ -96,12 +111,12 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
     }
 
     private async Task EnsureNoCycleAsync(
-        int todoItemId,
-        int dependsOnTodoItemId,
+        TodoItem item,
+        TodoItem dependsOn,
         CancellationToken cancellationToken)
     {
         var existing = await dependencies.GetAllAsync(cancellationToken);
-        DependencyRules.EnsureCanAdd(todoItemId, dependsOnTodoItemId, existing);
+        DependencyRules.EnsureCanAdd(ToReference(item), ToReference(dependsOn), existing);
     }
 
     private async Task<IReadOnlyList<TodoItem>> GetOrderedItemsAsync(
@@ -110,6 +125,11 @@ public class DependencyService(ITodoRepository todos, ITodoDependencyRepository 
     {
         var items = await todos.GetByIdsAsync(ids, cancellationToken);
         return TodoOrdering.ByUrgency(items).ToList();
+    }
+
+    private static TodoReference ToReference(TodoItem item)
+    {
+        return new TodoReference(item.Id, item.Title);
     }
 
     private static FreeTextDependency FindFreeTextDependency(TodoItem item, int dependencyId)

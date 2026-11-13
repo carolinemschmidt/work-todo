@@ -1,16 +1,23 @@
 <section class="mb-4">
     <h2 class="h5">Depends on</h2>
-    <ul class="list-group mb-2 depends-on-list">
-        @foreach (var other in DependsOn)
-        {
-            <li class="list-group-item d-flex align-items-center gap-2 depends-on-item">
-                <a class="flex-grow-1" href="@AppRoutes.Details(other.Id)">@other.Title</a>
-                <span class="small text-muted">@EnumDisplay.Text(other.Status)</span>
-                <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Remove dependency on @other.Title"
-                        @onclick="() => OnRemove.InvokeAsync(other)">Remove</button>
-            </li>
-        }
-    </ul>
+    @if (DependsOn.Count == 0)
+    {
+        <p class="text-muted depends-on-empty">@UiConstants.NoDependsOnMessage</p>
+    }
+    else
+    {
+        <ul class="list-group mb-2 depends-on-list">
+            @foreach (var other in DependsOn)
+            {
+                <li class="list-group-item d-flex align-items-center gap-2 depends-on-item">
+                    <a class="flex-grow-1" href="@AppRoutes.Details(other.Id)">@other.Title</a>
+                    <span class="small text-muted">@EnumDisplay.Text(other.Status)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Remove dependency on @other.Title"
+                            @onclick="() => OnRemove.InvokeAsync(other)">Remove</button>
+                </li>
+            }
+        </ul>
+    }
     <form class="d-flex gap-2" aria-label="Add dependency form" @onsubmit="AddAsync">
         <select class="form-select" aria-label="Depends on" @bind="_choice">
             <option value="@UiConstants.NoSelection">Choose a todo…</option>

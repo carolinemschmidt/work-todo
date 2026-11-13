@@ -1,4 +1,5 @@
 using WorkTodo.Core.Entities;
+using WorkTodo.Core.Enums;
 using WorkTodo.Core.Exceptions;
 using WorkTodo.Services.Exceptions;
 using WorkTodo.Services.Tests.Fakes;
@@ -45,6 +46,73 @@ public class DependencyServiceTests
         await Assert.ThrowsAsync<CircularDependencyException>(() => _service.AddDependencyAsync(2, 1));
 
         Assert.Single(_dependencies.Dependencies);
+    }
+
+    [Fact]
+    public async Task Available_dependencies_leave_out_the_item_itself_and_what_it_already_depends_on()
+    {
+        _todos.Seed(TestData.CreateItem(1), TestData.CreateItem(2), TestData.CreateItem(3));
+        _dependencies.Seed(new TodoDependency(1, 2));
+
+        var available = await _service.GetAvailableDependenciesAsync(1);
+
+        Assert.Equal([3], available.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task Available_dependencies_leave_out_items_that_would_create_a_cycle()
+    {
+        _todos.Seed(
+            TestData.CreateItem(1),
+            TestData.CreateItem(2),
+            TestData.CreateItem(3),
+            TestData.CreateItem(4));
+        _dependencies.Seed(new TodoDependency(2, 1), new TodoDependency(3, 2));
+
+        var available = await _service.GetAvailableDependenciesAsync(1);
+
+        Assert.Equal([4], available.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task Available_dependencies_are_ordered_most_urgent_first()
+    {
+        _todos.Seed(
+            TestData.CreateItem(1),
+            TestData.CreateItem(2, "Low one", Priority.Low),
+            TestData.CreateItem(3, "Critical one", Priority.Critical));
+
+        var available = await _service.GetAvailableDependenciesAsync(1);
+
+        Assert.Equal([3, 2], available.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task Available_dependencies_for_an_unknown_item_is_not_found()
+    {
+        await Assert.ThrowsAsync<NotFoundException>(() => _service.GetAvailableDependenciesAsync(42));
+    }
+
+    [Fact]
+    public async Task Rejected_circular_dependency_names_both_todos()
+    {
+        _todos.Seed(TestData.CreateItem(1, "Write report"), TestData.CreateItem(2, "Get numbers"));
+        _dependencies.Seed(new TodoDependency(1, 2));
+
+        var exception = await Assert.ThrowsAsync<CircularDependencyException>(() => _service.AddDependencyAsync(2, 1));
+
+        Assert.Contains("\"Get numbers\"", exception.Message);
+        Assert.Contains("\"Write report\"", exception.Message);
+    }
+
+    [Fact]
+    public async Task Rejected_self_dependency_names_the_todo()
+    {
+        _todos.Seed(TestData.CreateItem(1, "Write report"));
+
+        var exception = await Assert.ThrowsAsync<SelfDependencyException>(() => _service.AddDependencyAsync(1, 1));
+
+        Assert.Contains("\"Write report\"", exception.Message);
     }
 
     [Fact]

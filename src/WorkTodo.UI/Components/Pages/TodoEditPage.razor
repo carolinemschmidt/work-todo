@@ -46,7 +46,8 @@
             <div class="col-sm-4">
                 <label class="form-label" for="todo-due-date">Due date</label>
                 <InputDate TValue="DateOnly?" id="todo-due-date" class="form-control" aria-label="Due date"
-                           @bind-Value="_model.DueDate" />
+                           ParsingErrorMessage="@UiConstants.DueDateParsingMessage" @bind-Value="_model.DueDate" />
+                <ValidationMessage For="() => _model.DueDate" />
             </div>
         </div>
 

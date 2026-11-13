@@ -1,5 +1,5 @@
 namespace WorkTodo.Core.Exceptions;
 
-public class CircularDependencyException(int todoItemId, int dependsOnTodoItemId)
+public class CircularDependencyException(string todoTitle, string dependsOnTitle)
     : InvalidOperationException(
-        $"Todo item {todoItemId} cannot depend on {dependsOnTodoItemId} because {dependsOnTodoItemId} already depends on it.");
+        $"\"{todoTitle}\" cannot depend on \"{dependsOnTitle}\" because \"{dependsOnTitle}\" already depends on it, directly or through other todos.");

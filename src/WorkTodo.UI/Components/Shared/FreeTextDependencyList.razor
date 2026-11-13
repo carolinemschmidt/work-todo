@@ -1,16 +1,23 @@
-<ul class="list-group mb-2">
-    @foreach (var dependency in Dependencies)
-    {
-        <li class="list-group-item d-flex align-items-center gap-2">
-            <input type="checkbox" class="form-check-input mt-0" checked="@dependency.IsResolved"
-                   aria-label="Resolved: @dependency.Text" @onchange="() => OnToggle.InvokeAsync(dependency)" />
-            <span class="flex-grow-1 @(dependency.IsResolved ? "text-decoration-line-through text-muted" : null)">@dependency.Text</span>
-            <button type="button" class="btn btn-sm btn-outline-danger"
-                    aria-label="Remove free-text dependency @dependency.Text"
-                    @onclick="() => OnRemove.InvokeAsync(dependency)">Remove</button>
-        </li>
-    }
-</ul>
+@if (Dependencies.Count == 0)
+{
+    <p class="text-muted free-text-empty">@UiConstants.NoFreeTextDependenciesMessage</p>
+}
+else
+{
+    <ul class="list-group mb-2">
+        @foreach (var dependency in Dependencies)
+        {
+            <li class="list-group-item d-flex align-items-center gap-2">
+                <input type="checkbox" class="form-check-input mt-0" checked="@dependency.IsResolved"
+                       aria-label="Resolved: @dependency.Text" @onchange="() => OnToggle.InvokeAsync(dependency)" />
+                <span class="flex-grow-1 @(dependency.IsResolved ? "text-decoration-line-through text-muted" : null)">@dependency.Text</span>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        aria-label="Remove free-text dependency @dependency.Text"
+                        @onclick="() => OnRemove.InvokeAsync(dependency)">Remove</button>
+            </li>
+        }
+    </ul>
+}
 
 <form class="d-flex gap-2" aria-label="Add free-text dependency form" @onsubmit="AddAsync">
     <input class="form-control" aria-label="New free-text dependency" placeholder="Something this is waiting for"
@@ -35,12 +42,7 @@
 
     private async Task AddAsync()
     {
-        if (string.IsNullOrWhiteSpace(_newText) || OnAdd is null)
-        {
-            return;
-        }
-
-        if (await OnAdd(_newText))
+        if (OnAdd is not null && await OnAdd(_newText))
         {
             _newText = string.Empty;
         }

@@ -33,10 +33,21 @@ else
     <ul class="list-group tag-list">
         @foreach (var tag in _tags)
         {
-            <li class="list-group-item d-flex align-items-center">
+            <li class="list-group-item d-flex align-items-center gap-2">
                 <span class="flex-grow-1">@tag.Name</span>
-                <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Delete tag @tag.Name"
-                        @onclick="() => DeleteAsync(tag)">Delete</button>
+                @if (_tagToDelete?.Id == tag.Id)
+                {
+                    <span class="tag-delete-confirmation text-muted">@_deleteWarning</span>
+                    <button type="button" class="btn btn-sm btn-danger" aria-label="Confirm delete tag @tag.Name"
+                            @onclick="() => DeleteAsync(tag)">Confirm delete</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" aria-label="Cancel delete tag @tag.Name"
+                            @onclick="CancelDelete">Cancel</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Delete tag @tag.Name"
+                            @onclick="() => AskToDeleteAsync(tag)">Delete</button>
+                }
             </li>
         }
     </ul>
@@ -46,6 +57,8 @@ else
     private IReadOnlyList<Tag> _tags = [];
     private string _newName = string.Empty;
     private bool _loaded;
+    private Tag? _tagToDelete;
+    private string _deleteWarning = string.Empty;
 
     protected override Task OnInitializedAsync() => RunAsync(ReloadAsync);
 
@@ -67,12 +80,32 @@ else
         });
     }
 
+    private Task AskToDeleteAsync(Tag tag)
+    {
+        return RunAsync(async () =>
+        {
+            var todos = await TodoService.GetAllAsync();
+            _deleteWarning = DescribeUsage(todos.Count(todo => todo.Tags.Any(t => t.Id == tag.Id)));
+            _tagToDelete = tag;
+        });
+    }
+
+    private void CancelDelete() => _tagToDelete = null;
+
     private Task DeleteAsync(Tag tag)
     {
+        _tagToDelete = null;
         return RunAsync(async () =>
         {
             await TagService.DeleteAsync(tag.Id);
             await ReloadAsync();
         });
+    }
+
+    private static string DescribeUsage(int todoCount)
+    {
+        return todoCount == 0
+            ? UiConstants.TagUnusedMessage
+            : string.Format(UiConstants.TagUsedMessage, todoCount, todoCount == 1 ? UiConstants.TodoSingular : UiConstants.TodoPlural);
     }
 }

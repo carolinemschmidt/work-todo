@@ -153,21 +153,151 @@ public class TodoDetailsPageTests : WebTestBase
     }
 
     [Fact]
-    public async Task Circular_dependency_shows_an_error()
+    public async Task Todos_that_would_create_a_cycle_are_not_offered()
     {
         var first = await CreateTodoAsync("First");
         var second = await CreateTodoAsync("Second");
-        await UseServicesAsync(async services =>
-        {
-            await services.GetRequiredService<IDependencyService>().AddDependencyAsync(first.Id, second.Id);
-            return 0;
-        });
+        var unrelated = await CreateTodoAsync("Unrelated");
+        await AddDependencyAsync(first.Id, second.Id);
+
         var cut = RenderDetails(second.Id);
+
+        var options = cut.FindAll("select[aria-label='Depends on'] option").Select(option => option.TextContent);
+        Assert.Equal(["Choose a todo…", "Unrelated"], options);
+    }
+
+    [Fact]
+    public async Task Circular_dependency_created_while_the_page_was_open_shows_an_error()
+    {
+        var first = await CreateTodoAsync("First");
+        var second = await CreateTodoAsync("Second");
+        var cut = RenderDetails(second.Id);
+        await AddDependencyAsync(first.Id, second.Id);
 
         cut.Find("select[aria-label='Depends on']").Change(first.Id.ToString());
         cut.Find("form[aria-label='Add dependency form']").Submit();
 
-        cut.WaitForAssertion(() => Assert.Contains("already depends on it", cut.Find(".alert-danger").TextContent));
+        cut.WaitForAssertion(() =>
+        {
+            var message = cut.Find(".alert-danger").TextContent;
+            Assert.Contains("\"Second\" cannot depend on \"First\"", message);
+            Assert.Contains("already depends on it", message);
+        });
+    }
+
+    [Fact]
+    public async Task Todo_waiting_on_an_unfinished_todo_is_marked_blocked()
+    {
+        var item = await CreateTodoAsync("Write report");
+        var blocker = await CreateTodoAsync("Get numbers");
+        await AddDependencyAsync(item.Id, blocker.Id);
+
+        var cut = RenderDetails(item.Id);
+
+        Assert.NotEmpty(cut.FindAll(".blocked-badge"));
+    }
+
+    [Fact]
+    public async Task Todo_waiting_on_unresolved_free_text_is_marked_blocked()
+    {
+        var item = await CreateTodoAsync("Write report");
+        await UseServicesAsync(async services =>
+        {
+            await services.GetRequiredService<IDependencyService>().AddFreeTextDependencyAsync(item.Id, "Approval");
+            return 0;
+        });
+
+        var cut = RenderDetails(item.Id);
+
+        Assert.NotEmpty(cut.FindAll(".blocked-badge"));
+    }
+
+    [Fact]
+    public async Task Todo_is_not_marked_blocked_once_what_it_waited_on_is_done()
+    {
+        var item = await CreateTodoAsync("Write report");
+        var blocker = await CreateTodoAsync("Get numbers");
+        await AddDependencyAsync(item.Id, blocker.Id);
+        await UseServicesAsync(async services =>
+        {
+            await services.GetRequiredService<ITodoService>().ChangeStatusAsync(blocker.Id, TodoStatus.Done);
+            return 0;
+        });
+
+        var cut = RenderDetails(item.Id);
+
+        Assert.Empty(cut.FindAll(".blocked-badge"));
+    }
+
+    [Fact]
+    public async Task Todo_without_dependencies_is_not_marked_blocked()
+    {
+        var item = await CreateTodoAsync("Write report");
+
+        var cut = RenderDetails(item.Id);
+
+        Assert.Empty(cut.FindAll(".blocked-badge"));
+    }
+
+    [Fact]
+    public async Task Blocked_badge_disappears_when_the_blocking_dependency_is_removed()
+    {
+        var item = await CreateTodoAsync("Write report");
+        var blocker = await CreateTodoAsync("Get numbers");
+        await AddDependencyAsync(item.Id, blocker.Id);
+        var cut = RenderDetails(item.Id);
+
+        cut.Find("button[aria-label='Remove dependency on Get numbers']").Click();
+
+        cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(".blocked-badge")));
+    }
+
+    [Fact]
+    public async Task Todo_with_no_dependencies_says_so_in_each_dependency_section()
+    {
+        var item = await CreateTodoAsync("Write report");
+
+        var cut = RenderDetails(item.Id);
+
+        Assert.Contains("does not depend on any other todo", cut.Find(".depends-on-empty").TextContent);
+        Assert.Contains("Nothing is waiting on this todo", cut.Find(".dependents-empty").TextContent);
+        Assert.Contains("Nothing else is holding this up", cut.Find(".free-text-empty").TextContent);
+    }
+
+    [Fact]
+    public async Task Empty_state_lines_go_away_when_there_is_something_to_list()
+    {
+        var waiting = await CreateTodoAsync("Waiting item");
+        var blocker = await CreateTodoAsync("Blocker item");
+        await AddDependencyAsync(waiting.Id, blocker.Id);
+
+        var waitingPage = RenderDetails(waiting.Id);
+        var blockerPage = RenderDetails(blocker.Id);
+
+        Assert.Empty(waitingPage.FindAll(".depends-on-empty"));
+        Assert.Empty(blockerPage.FindAll(".dependents-empty"));
+    }
+
+    private Task AddDependencyAsync(int todoId, int dependsOnId)
+    {
+        return UseServicesAsync(async services =>
+        {
+            await services.GetRequiredService<IDependencyService>().AddDependencyAsync(todoId, dependsOnId);
+            return 0;
+        });
+    }
+
+    [Fact]
+    public async Task Blank_free_text_dependency_shows_an_error_and_saves_nothing()
+    {
+        var item = await CreateTodoAsync("Write report");
+        var cut = RenderDetails(item.Id);
+
+        cut.Find("input[aria-label='New free-text dependency']").Input("   ");
+        cut.Find("form[aria-label='Add free-text dependency form']").Submit();
+
+        cut.WaitForAssertion(() => Assert.Contains("Dependency text is required", cut.Find(".alert-danger").TextContent));
+        Assert.Empty((await GetTodoAsync(item.Id)).FreeTextDependencies);
     }
 
     [Fact]
