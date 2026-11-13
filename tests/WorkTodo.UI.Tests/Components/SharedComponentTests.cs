@@ -163,13 +163,13 @@ public class SharedComponentTests : BunitContext
     }
 
     [Fact]
-    public void Free_text_dependency_list_ignores_blank_text()
+    public void Free_text_dependency_list_passes_blank_text_on_so_the_page_can_report_it()
     {
-        var called = false;
-        Func<string, Task<bool>> onAdd = _ =>
+        string? received = null;
+        Func<string, Task<bool>> onAdd = text =>
         {
-            called = true;
-            return Task.FromResult(true);
+            received = text;
+            return Task.FromResult(false);
         };
         var cut = Render<FreeTextDependencyList>(p => p
             .Add(c => c.Dependencies, [])
@@ -178,7 +178,7 @@ public class SharedComponentTests : BunitContext
         cut.Find("input[aria-label='New free-text dependency']").Input("   ");
         cut.Find("form").Submit();
 
-        Assert.False(called);
+        Assert.Equal("   ", received);
     }
 
     [Fact]

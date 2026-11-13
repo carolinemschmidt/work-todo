@@ -12,6 +12,8 @@ public interface IDependencyService
 
     Task<IReadOnlyList<TodoItem>> GetDependentsAsync(int todoItemId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<TodoItem>> GetAvailableDependenciesAsync(int todoItemId, CancellationToken cancellationToken = default);
+
     Task AddFreeTextDependencyAsync(int todoItemId, string text, CancellationToken cancellationToken = default);
 
     Task ResolveFreeTextDependencyAsync(int todoItemId, int dependencyId, CancellationToken cancellationToken = default);

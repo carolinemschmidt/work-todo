@@ -41,6 +41,19 @@ public class TodoEditPageTests : WebTestBase
     }
 
     [Fact]
+    public async Task Unreadable_due_date_shows_a_validation_message_and_saves_nothing()
+    {
+        var cut = Render<TodoEditPage>();
+        cut.Find("input[aria-label='Title']").Change("Write report");
+        cut.Find("input[aria-label='Due date']").Change("not a date");
+
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() => Assert.Contains("Due date must be a valid date", cut.Find(".validation-message").TextContent));
+        Assert.Empty(await UseServicesAsync(services => services.GetRequiredService<ITodoService>().GetAllAsync()));
+    }
+
+    [Fact]
     public void New_todo_form_has_no_status_field()
     {
         var cut = Render<TodoEditPage>();

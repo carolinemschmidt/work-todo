@@ -1,4 +1,4 @@
 namespace WorkTodo.Core.Exceptions;
 
-public class SelfDependencyException(int todoItemId)
-    : InvalidOperationException($"Todo item {todoItemId} cannot depend on itself.");
+public class SelfDependencyException(string todoTitle)
+    : InvalidOperationException($"\"{todoTitle}\" cannot depend on itself.");

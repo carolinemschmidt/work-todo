@@ -6,7 +6,7 @@
             <PriorityBadge Priority="Item.Priority" />
             @if (IsBlocked)
             {
-                <span class="badge bg-dark me-1 blocked-badge">Blocked</span>
+                <BlockedBadge />
             }
             <span class="me-2">@EnumDisplay.Text(Item.Status)</span>
             @if (Item.DueDate is { } dueDate)

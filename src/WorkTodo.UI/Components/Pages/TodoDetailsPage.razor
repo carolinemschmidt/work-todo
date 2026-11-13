@@ -19,6 +19,10 @@ else if (_item is not null)
         <div>
             <h1 class="h3">@_item.Title</h1>
             <PriorityBadge Priority="_item.Priority" />
+            @if (_isBlocked)
+            {
+                <BlockedBadge />
+            }
             @if (_item.DueDate is { } dueDate)
             {
                 <span class="text-muted">Due @dueDate.ToString(UiConstants.DateFormat)</span>
@@ -57,14 +61,21 @@ else if (_item is not null)
 
     <section class="mb-4">
         <h2 class="h5">Waiting on this</h2>
-        <ul class="list-group dependents-list">
-            @foreach (var dependent in _dependents)
-            {
-                <li class="list-group-item">
-                    <a href="@AppRoutes.Details(dependent.Id)">@dependent.Title</a>
-                </li>
-            }
-        </ul>
+        @if (_dependents.Count == 0)
+        {
+            <p class="text-muted dependents-empty">@UiConstants.NoDependentsMessage</p>
+        }
+        else
+        {
+            <ul class="list-group dependents-list">
+                @foreach (var dependent in _dependents)
+                {
+                    <li class="list-group-item">
+                        <a href="@AppRoutes.Details(dependent.Id)">@dependent.Title</a>
+                    </li>
+                }
+            </ul>
+        }
     </section>
 
     <section class="mb-4">
@@ -79,6 +90,7 @@ else if (_item is not null)
     private IReadOnlyList<TodoItem> _dependsOn = [];
     private IReadOnlyList<TodoItem> _dependents = [];
     private IReadOnlyList<TodoItem> _candidates = [];
+    private bool _isBlocked;
     private bool _confirmingDelete;
 
     [Parameter]
@@ -92,9 +104,8 @@ else if (_item is not null)
         _dependsOn = await DependencyService.GetDependsOnAsync(Id);
         _dependents = await DependencyService.GetDependentsAsync(Id);
 
-        var alreadyDependsOn = _dependsOn.Select(item => item.Id).ToHashSet();
-        var all = await TodoService.GetAllAsync();
-        _candidates = all.Where(item => item.Id != Id && !alreadyDependsOn.Contains(item.Id)).ToList();
+        _candidates = await DependencyService.GetAvailableDependenciesAsync(Id);
+        _isBlocked = (await NextUpService.GetBlockedIdsAsync()).Contains(Id);
     }
 
     private async Task<bool> RunAndRenderAsync(Func<Task> action)
