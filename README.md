@@ -29,13 +29,19 @@ dotnet restore WorkTodo.slnx
 
 With a default SQL Express instance there is nothing to configure: the Development settings in `src/WorkTodo.Web/appsettings.Development.json` already point at `.\SQLEXPRESS` and create a database called `WorkTodo` on first run.
 
-To change anything, set an environment variable before starting the app. The settings are ordinary .NET configuration, so there is no `.env` file and no `.env.example`; this table lists everything that can be set.
+To change anything, set an environment variable before starting the app. This table lists everything that can be set.
 
-| Environment variable | Default | What it does |
+| Variable | Default | What it does |
 | --- | --- | --- |
-| `ConnectionStrings__WorkTodo` | `Server=.\SQLEXPRESS;Database=WorkTodo;Trusted_Connection=True;TrustServerCertificate=True` (Development) | Which SQL Server and database to use. Required when running a published build. If it is missing or blank, the app prints a message and exits. |
-| `Database__ApplyMigrationsOnStartup` | `true` in Development, otherwise `false` | Creates the database and applies migrations when the app starts. |
-| `ASPNETCORE_URLS` | `http://localhost:5157` when started with `dotnet run` | The address the app listens on. |
+| `ConnectionStrings__WorkTodo` | Local SQL Express in Development, none otherwise | Which SQL Server and database to use. |
+| `Database__ApplyMigrationsOnStartup` | `true` in Development, `false` otherwise | Creates the database and applies migrations on startup. |
+| `ASPNETCORE_URLS` | `http://localhost:5157` with `dotnet run` | The address the app listens on. |
+
+The connection string is required when running a published build. If it is missing or blank, the app prints a message and exits. The Development default is:
+
+```text
+Server=.\SQLEXPRESS;Database=WorkTodo;Trusted_Connection=True;TrustServerCertificate=True
+```
 
 For example, in PowerShell:
 
@@ -104,7 +110,6 @@ work-todo/
 ├── tests/                        # Tests for Core, Data (including in-memory), Services, UI and Demo
 ├── .github/                      # CI/CD workflow and the script that prepares the demo for GitHub Pages
 ├── CLAUDE.md                     # Project rules for Claude Code
-├── implementation.md             # Notes on how the agent handled the implementation
 ├── dotnet-tools.json             # Local tools (dotnet-ef)
 └── WorkTodo.slnx                 # The solution
 ```
@@ -113,9 +118,9 @@ work-todo/
 
 | Component | Choice | Reason |
 | --- | --- | --- |
-| Language and runtime | C# on .NET 10 | The stack the project was specified with. The same domain, service and UI code runs in both the server app and the browser demo. |
+| Language and runtime | C# on .NET 10 | Strongly typed, with good tooling for Blazor and Entity Framework Core. The same domain, service and UI code runs in both the server app and the browser demo. |
 | UI | Blazor (Server and WebAssembly) | One component library with two hosts: Server for the real app, WebAssembly so the demo can run on static hosting. |
-| Database | SQL Server Express | Free, runs on your own machine, and is the database the project was specified with. |
+| Database | SQL Server Express | Free, runs on your own machine, and fits the relational data well: todos, tags, links and dependencies are related through foreign keys. |
 | Data access | Entity Framework Core | Migrations create and update the schema. Repositories hide it from the rest of the code. |
 | Test databases | SQLite in memory, plus hand-written in-memory repositories | Fast tests with no server. How they differ from SQL Server is listed under Limitations. |
 | Component tests | xUnit and bUnit | Tests Blazor components without a browser. |
@@ -125,11 +130,11 @@ work-todo/
 
 - **One user, no login.** There are no accounts or permissions.
 - **Tested on Windows with SQL Server Express only.** The default connection string uses Windows authentication. Other platforms and SQL Server editions haven't been tried.
-- **Some things can't be edited.** A ticket link can't be changed (remove it and add it again), and a tag can't be renamed (delete it and create it again).
+- **Some things can't be edited.** A ticket link or the text of a free-text dependency can't be changed (remove it and add it again), and a tag can't be renamed (delete it and create it again).
 - **Filtering and sorting happen in memory.** That is fine for a personal list, not for thousands of todos.
 - **No conflict handling.** If the same todo is edited in two browser tabs, the last save wins.
 - **The tests don't run against SQL Server.** They use SQLite and the in-memory repositories, which behave differently, for example in how tag names are compared and how ids are numbered. The migrations and real writes were checked by hand against SQL Server Express. CI has no SQL Server job.
-- **The demo doesn't keep your data.** Changes are lost when the page is reloaded. The first visit downloads about 6.5 MB (compressed), partly because the demo carries SQL Server code it never uses.
+- **The demo doesn't keep your data.** Changes are lost when the page is reloaded. The first visit downloads about 7 MB (compressed), partly because the demo carries SQL Server code it never uses.
 - **Only the demo is deployed.** The Blazor Server app with a real database isn't hosted anywhere; you run it yourself.
 
 ## Developed with
